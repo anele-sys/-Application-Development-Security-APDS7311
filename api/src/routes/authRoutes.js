@@ -1,5 +1,5 @@
 /**
- * Authentication Routes
+ * Authentication Route
  * Defines public and protected authentication endpoints
  */
 
