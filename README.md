@@ -22,4 +22,14 @@ To create and run a minimal Node.js web application that displays "Hello APDS731
   Express
 
 
-## Testing Push
+## Ensure the below is done to start testing
+
+1. Update .env file with your own JWT_SECRET. You can generate one by running the below command in bash.
+    openssl rand -base64 64
+
+2. Generate your Certs. Navigate to the certs folder and open that folder in bash and then run the below command.
+    MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout localhost-key.pem -out localhost-cert.pem -subj "/CN=localhost"
+
+3. Navigate to the api folder first and then run do not run it in the root folder:
+    npm install
+    npm start or npm run dev
