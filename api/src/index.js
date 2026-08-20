@@ -153,7 +153,7 @@ if (USE_HTTPS) {
     process.exit(1);
   }
 } else {
-  // HTTP mode (development only – not recommended)
+  // HTTP mode (development only)
   app.listen(PORT, () => {
     console.log(`\n ${APP_NAME} API running in HTTP mode on port ${PORT}`);
     console.log(`URL: http://localhost:${PORT}`);
