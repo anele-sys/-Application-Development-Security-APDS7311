@@ -33,3 +33,5 @@ To create and run a minimal Node.js web application that displays "Hello APDS731
 3. Navigate to the api folder first and then run do not run it in the root folder:
     npm install
     npm start or npm run dev
+
+Note I have added location files to show folders and structure for the team.
