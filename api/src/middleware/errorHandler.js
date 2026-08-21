@@ -14,15 +14,28 @@ const errorHandler = (err, req, res, next) => {
     console.error(` Stack: ${err.stack}`);
   }
 
-  // Send a generic response to the client
-  res.status(500).json({
-    error: 'An unexpected error occurred. Please try again later.',
-    // Only include details in development for debugging
-    ...(process.env.NODE_ENV === 'development' && {
-      details: err.message,
-      path: req.originalUrl,
-      method: req.method
-    })
+  // Request body exceeds the configured limit
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      success: false,
+      error: 'Request payload is too large',
+      message: 'The request body exceeds the maximum allowed size'
+    });
+  }
+
+  // Invalid JSON
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid JSON',
+      message: 'The request contains invalid JSON'
+    });
+  }
+
+  // Generic server error
+  return res.status(500).json({
+    success: false,
+    error: 'An unexpected error occurred. Please try again later.'
   });
 };
 
