@@ -1,13 +1,13 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+# This workflow installs dependencies, builds the application,
+# and runs tests for the HustleHub API.
 
 name: Node.js CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -17,15 +17,31 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
+
+    # Download the repository code.
     - uses: actions/checkout@v4
+
+    # Set up the required Node.js version.
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+        cache: "npm"
+        cache-dependency-path: api/package-lock.json
+
+    # Install dependencies from the API project.
+    - name: Install dependencies
+      working-directory: api
+      run: npm ci
+
+    # Build the API if a build script exists.
+    - name: Build
+      working-directory: api
+      run: npm run build --if-present
+
+    # Run the API tests.
+    - name: Test
+      working-directory: api
+      run: npm test
