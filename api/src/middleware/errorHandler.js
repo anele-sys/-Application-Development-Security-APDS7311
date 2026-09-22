@@ -1,25 +1,14 @@
-/**
- * Global Error Handler Middleware
- * Catches all errors and returns safe, controlled responses
- * NEVER exposes stack traces to the client
- */
-
 const errorHandler = (err, req, res, next) => {
-  // Log the error internally (only in development)
+  // Log the full error only during development
   if (process.env.NODE_ENV === 'development') {
-    console.error('Unhandled Error:');
-    console.error(` Message: ${err.message}`);
-    console.error(` Path: ${req.originalUrl}`);
-    console.error(` Method: ${req.method}`);
-    console.error(` Stack: ${err.stack}`);
+    console.error(err);
   }
 
-  // Request body exceeds the configured limit
+  // Request body too large
   if (err.type === 'entity.too.large') {
     return res.status(413).json({
       success: false,
-      error: 'Request payload is too large',
-      message: 'The request body exceeds the maximum allowed size'
+      error: 'Request body is too large'
     });
   }
 
@@ -27,12 +16,36 @@ const errorHandler = (err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({
       success: false,
-      error: 'Invalid JSON',
-      message: 'The request contains invalid JSON'
+      error: 'Invalid JSON in request body'
     });
   }
 
-  // Generic server error
+  // Invalid MongoDB ObjectId
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid resource ID'
+    });
+  }
+
+  // Mongoose validation errors
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation failed',
+      details: Object.values(err.errors).map((error) => error.message)
+    });
+  }
+
+  // Duplicate MongoDB record
+  if (err.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      error: 'A record with the provided information already exists'
+    });
+  }
+
+  // Default server error
   return res.status(500).json({
     success: false,
     error: 'An unexpected error occurred. Please try again later.'
