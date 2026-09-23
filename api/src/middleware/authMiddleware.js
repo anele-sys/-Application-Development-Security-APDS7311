@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // Verify that the request contains a valid JWT authentication token.
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   try {
     // Get the Authorization header from the incoming request.
     const authHeader = req.headers.authorization;
@@ -39,7 +39,7 @@ const authenticateToken = (req, res, next) => {
     const decoded = jwt.verify(token, secret);
 
     // Find the user associated with the ID stored inside the JWT.
-    const user = User.findById(decoded.id);
+const user = await User.findById(decoded.id);
 
     // Reject the request if the user account no longer exists.
     if (!user) {

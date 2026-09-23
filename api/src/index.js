@@ -7,6 +7,7 @@
 const dotenv = require('dotenv');
 const path = require('path');
 
+
 dotenv.config({
   path: path.join(__dirname, '..', '..', '.env')
 });
@@ -19,6 +20,9 @@ const https = require('https');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
+const gigRoutes = require('./routes/gigRoutes');
+
+const connectDB = require('./config/database');
 
 // Import application routes and global error-handling middleware
 const authRoutes = require('./routes/authRoutes');
@@ -52,30 +56,29 @@ const provisionAdmin = async () => {
     return;
   }
 
-  // Check whether the administrator already exists
-  const existingAdmin = User.findByEmail(adminEmail);
+// Check whether the administrator already exists
+const existingAdmin = await User.findByEmail(adminEmail);
 
-  // Do not create a duplicate administrator
-  if (existingAdmin) {
-    return;
-  }
+// Do not create a duplicate administrator
+if (existingAdmin) {
+  return;
+}
 
-  // Hash the administrator password before storing the account
-  const hashedPassword = await bcrypt.hash(
-    adminPassword,
-    Number(process.env.SALT_ROUNDS) || 12
-  );
+// Hash the administrator password before storing the account
+const hashedPassword = await bcrypt.hash(
+  adminPassword,
+  Number(process.env.SALT_ROUNDS) || 12
+);
 
-  // Create the administrator using the private admin creation method
-  User.createAdmin({
-    name: adminName,
-    email: adminEmail,
-    password: hashedPassword
-  });
+// Create the administrator using the private admin creation method
+await User.createAdmin({
+  name: adminName,
+  email: adminEmail,
+  password: hashedPassword
+});
 
-  // Confirm that the development administrator was created
-  console.log(`Development admin provisioned: ${adminEmail}`);
-};
+// Confirm that the development administrator was created
+console.log(`Development admin provisioned: ${adminEmail}`);};
 
 // Disable the X-Powered-By header to reduce technology fingerprinting
 app.disable('x-powered-by');
@@ -163,7 +166,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Future application routes can be added here
-// app.use('/api/gigs', gigRoutes);
+app.use('/api/gigs', gigRoutes);
 // app.use('/api/bookings', bookingRoutes);
 
 // Return a controlled response when a requested route does not exist
@@ -178,8 +181,10 @@ app.use((req, res) => {
 // Handle errors that were not handled by the routes or middleware
 app.use(errorHandler);
 
-// Provision the development administrator before starting the server
-provisionAdmin()
+// Connect to MongoDB, provision the development administrator,
+// and then start the server
+connectDB()
+  .then(() => provisionAdmin())
   .then(() => {
     // Start the application using HTTPS when USE_HTTPS is enabled
     if (USE_HTTPS) {

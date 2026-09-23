@@ -33,7 +33,7 @@ const register = async (req, res, next) => {
     }
 
     // Check whether an account with the email already exists
-    const existingUser = User.findByEmail(email);
+    const existingUser = await User.findByEmail(email);
 
     if (existingUser) {
       return res.status(409).json({
@@ -45,8 +45,8 @@ const register = async (req, res, next) => {
     // Hash the password before storing it
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the new user with the hashed password
-    const user = User.create({
+    // Create the new user in MongoDB
+    const user = await User.createUser({
       name,
       email,
       password: hashedPassword,
@@ -59,7 +59,7 @@ const register = async (req, res, next) => {
       success: true,
       message: "User registered successfully",
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -67,6 +67,14 @@ const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    // Handle duplicate email errors from MongoDB
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "A user with this email already exists",
+      });
+    }
+
     // Pass unexpected errors to the global error handler
     next(error);
   }
@@ -95,7 +103,7 @@ const login = async (req, res, next) => {
     }
 
     // Find the user using the supplied email address
-    const user = User.findByEmail(email);
+    const user = await User.findByEmail(email);
 
     // Use the same message for an unknown email and incorrect password
     // to avoid revealing whether an account exists
@@ -130,7 +138,7 @@ const login = async (req, res, next) => {
       message: "Login successful",
       token,
       user: {
-        id: user.id,
+        id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
