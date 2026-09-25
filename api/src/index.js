@@ -23,14 +23,23 @@ const User = require('./models/User');
 const gigRoutes = require('./routes/gigRoutes');
 
 const connectDB = require('./config/database');
-
+const rateLimit = require('express-rate-limit'); // ADDED
 // Import application routes and global error-handling middleware
 const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Create the Express application
 const app = express();
-
+// Rate Limiter
+const apiLimiter = rateLimit({
+windowMs: 15 * 60 * 1000, // 15 minutes
+max: 100, // Limit each IP to 100 requests per window
+message: {
+error: 'Too many requests. Please try again later.'
+},
+standardHeaders: true,
+legacyHeaders: false
+});
 // Load application configuration from environment variables
 const PORT = process.env.PORT || 4000;
 const USE_HTTPS = process.env.USE_HTTPS === 'true';
@@ -138,7 +147,7 @@ app.use(express.json({ limit: '10kb' }));
 
 // Parse URL-encoded request bodies with a 10 KB size limit
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-
+app.use('/api', apiLimiter);
 // Provide a public health-check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -161,9 +170,20 @@ app.get('/', (req, res) => {
     documentation: 'See README.md for API documentation'
   });
 });
-
+/* =====*====================
+   ADDED: AUT* RATE LIMITER
+   =================*======== */
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 100, // 15 minutes
+  max: 5,                  // 5 login attempts
+  message: {
+    error: 'Too many login attempts. Please try again in 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 // Mount authentication routes under /api/auth
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 
 // Future application routes can be added here
 app.use('/api/gigs', gigRoutes);
