@@ -24,13 +24,18 @@ Before starting, install the following:
 
 ## Project Structure
 
-* `api/src/index.js` starts the application.
-* `api/src/routes` contains the API routes.
+* `api/src/index.js` starts the backend application.
+* `api/src/routes` contains the API routes (authentication, gigs).
 * `api/src/controllers` contains request and authentication logic.
 * `api/src/middleware` contains validation, authentication, and error-handling middleware.
-* `api/src/models` contains the user model.
-* `api/tests` contains automated tests.
+* `api/src/models` contains the user and gig models.
+* `api/tests` contains automated backend tests.
 * `api/certs` stores the local HTTPS certificate files.
+* `client/src` contains the React frontend single-page application (Role 4).
+* `client/src/services` contains the centralized API client and auth service layer.
+* `client/src/context` contains global authentication and session state.
+* `client/src/components` contains protected route guards, navigation, and reusable UI components.
+* `client/src/pages` contains auth pages (Login, Register), home, and role dashboards.
 
 
 ## Setup and Installation
@@ -43,7 +48,7 @@ Create or update the `.env` file in the project root. At minimum, provide a secu
 
 The application also supports `PORT`, `NODE_ENV`, `USE_HTTPS`, `CLIENT_ORIGIN`, `APP_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` environment variables.
 
-### 2. Generate local certificates
+### 2. Generate local certificates (for Backend HTTPS)
 
 Open Bash in the `api/certs` folder and run:
 
@@ -53,30 +58,39 @@ The certificate files must be named `localhost-key.pem` and `localhost-cert.pem`
 
 ### 3. Install dependencies
 
-Navigate to the `api` folder before running npm commands. Do not run them from the project root:
+Install API dependencies:
+```bash
+cd api
+npm install
+```
 
-	cd api
-	npm install
+Install Client dependencies:
+```bash
+cd ../client
+npm install
+```
 
-### 4. Start the API
+### 4. Start the Application Stack
 
-Start the server normally with:
+**Start Backend API:**
+```bash
+cd api
+npm run dev
+```
+*(Backend runs on `http://localhost:4000` or `https://localhost:4000`)*
 
-	npm start
+**Start Frontend Client:**
+```bash
+cd client
+npm run dev
+```
+*(Frontend runs on `http://localhost:5173`)*
 
-For automatic restarts during development, use:
-
-	npm run dev
-
-When HTTPS is enabled, the API is available at:
-
-	https://localhost:4000
-
-The health endpoint can be checked with:
-
-	curl -k https://localhost:4000/health
-
-The `-k` option allows curl to connect to the locally generated, self-signed certificate.
+When HTTPS is enabled on the backend, the API is available at `https://localhost:4000`. The health endpoint can be checked with:
+```bash
+curl -k https://localhost:4000/health
+```
+*(The `-k` flag allows curl to connect to the locally generated, self-signed certificate.)*
 
 ## API Endpoints
 
