@@ -1,0 +1,11 @@
+name: 'HustleHub+ Local'
+values:
+  - key: baseUrl
+    value: 'https://localhost:4000/api'
+    enabled: true
+  - key: authToken
+    value: ''
+    enabled: true
+  - key: gigId
+    value: ''
+    enabled: true

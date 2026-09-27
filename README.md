@@ -46,7 +46,7 @@ Create or update the `.env` file in the project root. At minimum, provide a secu
 
 	openssl rand -base64 64
 
-The application also supports `PORT`, `NODE_ENV`, `USE_HTTPS`, `CLIENT_ORIGIN`, `APP_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` environment variables.
+The application also supports `MONGO_URI`, `PORT`, `NODE_ENV`, `USE_HTTPS`, `CLIENT_ORIGIN`, `APP_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` environment variables. Start MongoDB before the API and configure `MONGO_URI` in the root `.env` file (for example, `mongodb://127.0.0.1:27017/hustlehub` for a local MongoDB server).
 
 ### 2. Generate local certificates (for Backend HTTPS)
 
@@ -70,27 +70,36 @@ cd ../client
 npm install
 ```
 
-### 4. Start the Application Stack
+### 4. Run the Backend and Frontend
 
-**Start Backend API:**
+Run each application in its own terminal. Start MongoDB first, and confirm the root `.env` file contains a working `MONGO_URI`. If `USE_HTTPS=true`, ensure the local certificate files from step 2 exist in `api/certs`.
+
+**Terminal 1: Backend API** (from the repository root):
+
 ```bash
 cd api
 npm run dev
 ```
-*(Backend runs on `http://localhost:4000` or `https://localhost:4000`)*
 
-**Start Frontend Client:**
+Wait for the `MongoDB connected successfully` message. With `USE_HTTPS=true`, the API runs at `https://localhost:4000`; otherwise it runs at `http://localhost:4000`.
+
+**Terminal 2: Frontend client** (also from the repository root):
+
 ```bash
 cd client
+npm install
 npm run dev
 ```
-*(Frontend runs on `http://localhost:5173`)*
 
-When HTTPS is enabled on the backend, the API is available at `https://localhost:4000`. The health endpoint can be checked with:
+Open the Vite URL shown in the terminal, normally `http://localhost:5173`. Keep both terminals open while using the application. The Vite development server proxies `/api` and `/health` requests to the API at `https://localhost:4000` and accepts the local self-signed certificate for that proxy connection.
+
+To check the API directly when HTTPS is enabled, run:
+
 ```bash
 curl -k https://localhost:4000/health
 ```
-*(The `-k` flag allows curl to connect to the locally generated, self-signed certificate.)*
+
+The `-k` flag allows curl to connect to the locally generated, self-signed certificate. You can also check the API through the frontend proxy at `http://localhost:5173/health`.
 
 ## API Endpoints
 
@@ -108,16 +117,64 @@ Protected endpoints require the JWT in the request's Authorization header using 
 
 The admin account is provisioned privately from environment variables when `NODE_ENV=development`. It is not available through public registration.
 
-## Testing and Code Quality
+## Testing Procedures
 
-Run these commands from the `api` folder:
+### Run the automated API tests
 
-* `npm test` runs the Jest test suite.
-* `npm run test:coverage` generates a Jest coverage report.
-* `npm run lint` checks the source code with ESLint.
-* `npm run test:api` runs the Postman collection with Newman.
+1. Open a terminal in the repository root and enter the API folder:
 
-The Postman files are located in `api/postman`.
+	```bash
+	cd api
+	```
+
+2. Install the API dependencies if this is a fresh checkout:
+
+	```bash
+	npm install
+	```
+
+3. Run the Jest and Supertest suite:
+
+	```bash
+	npm test -- --runInBand
+	```
+
+The current suite contains 10 tests for authentication route status and registration/login validation. It does not require the API server or MongoDB to be running. A successful run reports `Tests: 10 passed, 10 total`.
+
+### Generate test coverage
+
+From the `api` folder, run:
+
+```bash
+npm run test:coverage
+```
+
+Jest prints a coverage summary and writes its coverage output under `api/coverage`.
+
+### Run the Postman API collection
+
+The API package defines an `npm run test:api` script for Newman. To run it when the collection and environment files are available:
+
+1. Ensure MongoDB is running and `MONGO_URI` is configured in the root `.env` file.
+2. Start the API in one terminal:
+
+	```bash
+	cd api
+	npm run dev
+	```
+
+3. In a second terminal, run the collection:
+
+	```bash
+	cd api
+	npm run test:api
+	```
+
+Newman must be installed and available on `PATH`. The current workspace does not contain the collection and environment JSON files referenced by this script (`api/postman/HustleHub-Part1.postman_collection.json` and `api/postman/HustleHub-Local.postman_environment.json`), so the Postman run requires those files to be added first. The script uses `--insecure` for local self-signed HTTPS certificates.
+
+### Lint check
+
+`npm run lint` is declared to run ESLint on `api/src/`, but ESLint is not currently installed as an API dependency. The command will fail on a clean setup until ESLint is added.
 
 ## Security Decisions
 

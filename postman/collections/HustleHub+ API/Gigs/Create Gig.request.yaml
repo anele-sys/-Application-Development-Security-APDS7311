@@ -1,0 +1,55 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/gigs'
+order: 3000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Professional Web Development",
+      "description": "I will build you a full-stack web application using React and Node.js with MongoDB.",
+      "category": "Web Development",
+      "price": 500
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 201", function () {
+        pm.response.to.have.status(201);
+      });
+
+      pm.test("Response has success: true", function () {
+        const response = pm.response.json();
+        pm.expect(response.success).to.be.true;
+      });
+
+      pm.test("Response body has a gig object", function () {
+        const response = pm.response.json();
+        pm.expect(response).to.have.property("gig");
+        pm.expect(response.gig).to.be.an("object");
+      });
+
+      pm.test("gig._id exists", function () {
+        const response = pm.response.json();
+        pm.expect(response.gig).to.have.property("_id");
+      });
+
+      pm.test("gig.title is 'Professional Web Development'", function () {
+        const response = pm.response.json();
+        pm.expect(response.gig.title).to.eql("Professional Web Development");
+      });
+
+      const response = pm.response.json();
+      if (response.success && response.gig && response.gig._id) {
+        pm.collectionVariables.set('gigId', response.gig._id);
+        console.log('gigId saved to collection variables:', response.gig._id);
+      }

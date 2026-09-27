@@ -1,0 +1,30 @@
+$kind: http-request
+method: DELETE
+url: '{{baseUrl}}/gigs/:id'
+order: 5000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'
+pathVariables:
+  - key: id
+    value: '{{gigId}}'
+    description: 'MongoDB ObjectId of the gig to delete'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has success: true", function () {
+        const response = pm.response.json();
+        pm.expect(response.success).to.be.true;
+      });
+
+      pm.test("Response body has a message property", function () {
+        const response = pm.response.json();
+        pm.expect(response).to.have.property("message");
+      });

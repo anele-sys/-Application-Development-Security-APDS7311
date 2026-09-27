@@ -1,0 +1,6 @@
+$kind: collection
+description: Complete API collection for HustleHub+ — a secure freelancing platform. Includes authentication (register, login, JWT-protected routes) and gig management endpoints. Run Login first so the auth token is automatically saved for protected requests.
+variables:
+  baseUrl: https://localhost:4000/api
+  authToken: ""
+  gigId: ""
