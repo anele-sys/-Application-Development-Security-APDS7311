@@ -50,6 +50,27 @@ const getGigs = async (req, res, next) => {
   }
 };
 
+// Get every gig owned by the authenticated freelancer, including inactive gigs
+const getMyGigs = async (req, res, next) => {
+  try {
+    const gigs = await Gig.find({
+      owner: req.user.id
+    })
+      .populate('owner', 'name email')
+      .sort({
+        createdAt: -1
+      });
+
+    return res.status(200).json({
+      success: true,
+      count: gigs.length,
+      gigs
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get a single gig
 const getGigById = async (req, res, next) => {
   try {
@@ -169,6 +190,7 @@ const deleteGig = async (req, res, next) => {
 module.exports = {
   createGig,
   getGigs,
+  getMyGigs,
   getGigById,
   updateGig,
   deleteGig

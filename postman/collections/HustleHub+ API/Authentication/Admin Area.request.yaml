@@ -1,0 +1,9 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/auth/admin-area'
+order: 7000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'

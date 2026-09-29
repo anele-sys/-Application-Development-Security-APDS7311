@@ -1,0 +1,53 @@
+$kind: http-request
+method: PUT
+url: '{{baseUrl}}/gigs/:id'
+order: 4000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'
+pathVariables:
+  - key: id
+    value: '{{gigId}}'
+    description: 'MongoDB ObjectId of the gig to update'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Updated Web Development Service",
+      "description": "I will build you a full-stack web application using React and Node.js with MongoDB. Now with TypeScript support.",
+      "price": 600,
+      "status": "active"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has success: true", function () {
+        const response = pm.response.json();
+        pm.expect(response.success).to.be.true;
+      });
+
+      pm.test("Response body has a gig object", function () {
+        const response = pm.response.json();
+        pm.expect(response).to.have.property("gig");
+        pm.expect(response.gig).to.be.an("object");
+      });
+
+      pm.test("gig.title is 'Updated Web Development Service'", function () {
+        const response = pm.response.json();
+        pm.expect(response.gig.title).to.eql("Updated Web Development Service");
+      });
+
+      pm.test("gig.price is 600", function () {
+        const response = pm.response.json();
+        pm.expect(response.gig.price).to.eql(600);
+      });

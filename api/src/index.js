@@ -210,19 +210,13 @@ connectDB()
     if (USE_HTTPS) {
 
       // Load the private SSL key and certificate paths from the environment
-      const keyPath = process.env.SSL_KEY_PATH || path.join(
-        __dirname,
-        '..',
-        'certs',
-        'localhost-key.pem'
-      );
+      const keyPath = process.env.SSL_KEY_PATH
+        ? path.resolve(__dirname, '..', '..', process.env.SSL_KEY_PATH)
+        : path.join(__dirname, '..', 'certs', 'localhost-key.pem');
 
-      const certPath = process.env.SSL_CERT_PATH || path.join(
-        __dirname,
-        '..',
-        'certs',
-        'localhost-cert.pem'
-      );
+      const certPath = process.env.SSL_CERT_PATH
+        ? path.resolve(__dirname, '..', '..', process.env.SSL_CERT_PATH)
+        : path.join(__dirname, '..', 'certs', 'localhost-cert.pem');
 
       try {
         // Load the local SSL certificate and private key

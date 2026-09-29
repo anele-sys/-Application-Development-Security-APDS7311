@@ -1,0 +1,31 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/gigs/:id'
+order: 2000
+pathVariables:
+  - key: id
+    value: '{{gigId}}'
+    description: 'MongoDB ObjectId of the gig'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has success: true", function () {
+        const response = pm.response.json();
+        pm.expect(response.success).to.be.true;
+      });
+
+      pm.test("Response body has a gig object", function () {
+        const response = pm.response.json();
+        pm.expect(response).to.have.property("gig");
+        pm.expect(response.gig).to.be.an("object");
+      });
+
+      pm.test("gig._id exists", function () {
+        const response = pm.response.json();
+        pm.expect(response.gig).to.have.property("_id");
+      });

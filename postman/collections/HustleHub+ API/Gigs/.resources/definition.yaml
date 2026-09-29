@@ -1,0 +1,4 @@
+$kind: collection
+name: Gigs
+description: 'Browse and manage freelancer gigs. Public endpoints are open to all; create, update, and delete require a freelancer JWT.'
+order: 2000

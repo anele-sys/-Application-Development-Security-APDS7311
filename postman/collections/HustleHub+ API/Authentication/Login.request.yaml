@@ -1,0 +1,23 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/auth/login'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "Shane@example.com",
+      "password": "Password1"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const response = pm.response.json();
+      if (response.success && response.token) {
+        pm.collectionVariables.set('authToken', response.token);
+        console.log('authToken saved to collection variables');
+      }

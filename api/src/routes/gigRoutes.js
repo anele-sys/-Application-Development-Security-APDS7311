@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createGig,
   getGigs,
+  getMyGigs,
   getGigById,
   updateGig,
   deleteGig
@@ -17,6 +18,14 @@ const {
 
 // Anyone can browse active gigs
 router.get('/', getGigs);
+
+// Freelancers can manage all of their own gigs, including inactive listings
+router.get(
+  '/mine',
+  authenticateToken,
+  requireRole('freelancer'),
+  getMyGigs
+);
 
 // Anyone can view a specific gig
 router.get('/:id', getGigById);

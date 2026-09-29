@@ -1,0 +1,4 @@
+$kind: collection
+name: Authentication
+description: 'User registration, login, JWT-protected profile, and role-based access endpoints (client, freelancer, admin).'
+order: 1000

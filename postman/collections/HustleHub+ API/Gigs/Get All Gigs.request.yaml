@@ -1,0 +1,26 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/gigs'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test("Response has success: true", function () {
+        const response = pm.response.json();
+        pm.expect(response.success).to.be.true;
+      });
+
+      pm.test("Response body has a gigs property that is an array", function () {
+        const response = pm.response.json();
+        pm.expect(response).to.have.property("gigs");
+        pm.expect(response.gigs).to.be.an("array");
+      });
+
+      pm.test("Response time is less than 3000ms", function () {
+        pm.expect(pm.response.responseTime).to.be.below(3000);
+      });

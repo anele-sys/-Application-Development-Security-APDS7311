@@ -1,0 +1,9 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/auth/client-area'
+order: 5000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{authToken}}'
