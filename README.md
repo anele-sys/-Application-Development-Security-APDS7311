@@ -21,6 +21,7 @@ Before starting, install the following:
 * Node.js and npm
 * OpenSSL
 * Git, if cloning the repository
+* Newman CLI for running the Postman collection from the terminal (`npm install -g newman` or `npx newman`)
 
 ## Project Structure
 
@@ -151,26 +152,51 @@ npm run test:coverage
 
 Jest prints a coverage summary and writes its coverage output under `api/coverage`.
 
-### Run the Postman API collection
+### Run the Postman API collection with Newman
 
-The API package defines an `npm run test:api` script for Newman. To run it when the collection and environment files are available:
+The workspace includes a Postman export under the root `postman` folder, but those files are stored as individual request and environment exports rather than a single JSON collection file. Newman can run an exported collection once it has been generated as a collection file.
 
-1. Ensure MongoDB is running and `MONGO_URI` is configured in the root `.env` file.
-2. Start the API in one terminal:
+1. Install Newman if it is not already available:
+
+	```bash
+	npm install -g newman
+	```
+
+	or use the one-off command form without a global install:
+
+	```bash
+	npx newman --version
+	```
+
+2. Ensure MongoDB is running and `MONGO_URI` is configured in the root `.env` file.
+
+3. Start the API in one terminal:
 
 	```bash
 	cd api
 	npm run dev
 	```
 
-3. In a second terminal, run the collection:
+4. In a second terminal, export the collection from Postman as JSON or YAML, then run it with Newman. For example:
+
+	```bash
+	cd /path/to/project
+	newman run ./postman/collections/"HustleHub+ API".json \
+	  --environment ./postman/environments/"HustleHub+ Local.environment".json \
+	  --globals ./postman/globals/workspace.globals.json \
+	  --insecure
+	```
+
+	If the collection is saved as a YAML file instead of JSON, the same command works with the YAML file path. Use `--insecure` because the local API uses a self-signed HTTPS certificate in development.
+
+5. You can also run the project script from the API folder if a valid collection file is added there:
 
 	```bash
 	cd api
 	npm run test:api
 	```
 
-Newman must be installed and available on `PATH`. The current workspace does not contain the collection and environment JSON files referenced by this script (`api/postman/HustleHub-Part1.postman_collection.json` and `api/postman/HustleHub-Local.postman_environment.json`), so the Postman run requires those files to be added first. The script uses `--insecure` for local self-signed HTTPS certificates.
+	This script expects the collection and environment files to exist in the `api/postman` folder and will fail on a fresh checkout until those files are created or exported.
 
 ### Lint check
 
