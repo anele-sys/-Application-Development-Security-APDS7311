@@ -1,6 +1,16 @@
 import apiClient from './api';
 
 const gigService = {
+  async getAll() {
+    const response = await apiClient.get('/api/gigs');
+    return response.data;
+  },
+
+  async getById(id) {
+    const response = await apiClient.get(`/api/gigs/${id}`);
+    return response.data;
+  },
+
   async getMine() {
     const response = await apiClient.get('/api/gigs/mine');
     return response.data;

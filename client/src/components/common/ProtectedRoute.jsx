@@ -16,9 +16,11 @@ const ProtectedRoute = ({ allowedRoles = [], children }) => {
     return <LoadingSpinner message="Verifying authentication..." />;
   }
 
-  // If user is not authenticated, redirect to login while preserving target route
+  // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const roleDashboards = ['/client-dashboard', '/freelancer-dashboard', '/admin-dashboard'];
+    const shouldPreserveLocation = !roleDashboards.includes(location.pathname);
+    return <Navigate to="/login" state={shouldPreserveLocation ? { from: location } : null} replace />;
   }
 
   // If roles are specified and user's role does not match, redirect to unauthorized

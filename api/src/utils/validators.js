@@ -25,14 +25,16 @@ const isValidRole = (role) => {
   return VALID_ROLES.includes(role);
 };
 
-// Remove unnecessary whitespace from string input.
-// Return an empty string when the supplied value is not a string.
+// Remove unnecessary whitespace from string input and strip potentially dangerous HTML/script tags
 const sanitiseString = (value) => {
   if (typeof value !== 'string') {
     return '';
   }
 
-  return value.trim();
+  return value
+    .trim()
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/[<>]/g, ''); // Remove raw HTML angle brackets to prevent injection
 };
 
 // Export the validation constants and helper functions.

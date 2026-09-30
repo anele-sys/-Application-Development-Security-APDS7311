@@ -34,6 +34,22 @@ router.get('/status', (req, res) => {
   });
 });
 
+// Import express-rate-limit for endpoint protection
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter specifically for login attempts
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: 10,                  // 10 failed attempts
+  skipSuccessfulRequests: true, // Only count failed attempts (prevents lockouts for valid sessions)
+  message: {
+    success: false,
+    message: 'Too many login attempts. Please try again in 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Allow users to create a new account.
 // Registration input is validated before the controller runs.
 router.post(
@@ -46,6 +62,7 @@ router.post(
 // Login input is validated before the controller runs.
 router.post(
   '/login',
+  authLimiter,
   validateLogin,
   login
 );
