@@ -1,245 +1,227 @@
-# Application-Development-Security-APDS7311
+# HustleHub+ Secure Full-Stack Application (APDS7311)
 
 ## Project Overview
 
-HustleHub is a secure freelance marketplace platform where freelancers can advertise services and clients can browse and book those services. The wider platform is expected to handle sensitive information such as user credentials, financial transactions, income earned, and estimated tax obligations.
+**HustleHub+** is a secure, role-based freelance marketplace platform built with a Node.js/Express HTTPS backend and a modern React frontend. Freelancers can publish, update, and manage service listings, while clients can browse the marketplace and initiate bookings. The system simulates payment confirmation and generates verifiable transaction records, tracking client expenditures and freelancer earnings with strict security controls and privacy guarantees.
 
-## Intended Users
+---
 
-The system is designed for three types of users:
+## Intended Users & Role-Based Access Control (RBAC)
 
-* **Clients** can create accounts, sign in, view their profile, and access client-only resources.
-* **Freelancers** can create accounts, sign in, view their profile, and access freelancer-only resources.
-* **Administrators** manage privileged operations through a private administrator account. Administrators cannot register through the public registration endpoint.
+The application enforces strict separation of privileges across three user roles:
 
-The API is intended to be used by a HustleHub frontend or API client such as Postman. Users interact with the backend through HTTPS requests, while the API validates requests, authenticates accounts, and enforces access based on the user's role.
+* **Clients:** Register, log in, browse marketplace gigs by keyword and category, initiate bookings with simulated payment checkout, view order histories and transaction receipts, and track total spend.
+* **Freelancers:** Register, log in, manage their own gig listings (create, edit, delete, toggle active/inactive status), review received client orders, update project delivery status (e.g., in progress, completed, cancelled), and track total earned income.
+* **Administrators:** Provisioned privately via environment variables (`ADMIN_EMAIL`, `ADMIN_PASSWORD`), manage privileged system-wide operations, audit all transactions, inspect platform volume, and monitor security health metrics.
 
-## Prerequisites
+Users cannot access, modify, or delete resources that do not belong to them.
 
-Before starting, install the following:
+---
 
-* Node.js and npm
-* OpenSSL
-* Git, if cloning the repository
-* Newman CLI for running the Postman collection from the terminal (`npm install -g newman` or `npx newman`)
+## Key Application Features
+
+### 1. Gig Management
+* **Freelancer Control:** Freelancers create, update, and delete service listings.
+* **Granular Ownership:** The backend strictly checks `gig.owner === req.user.id` on update and delete operations.
+* **Marketplace Discovery:** Public and authenticated clients can browse active gigs with real-time search and category filtering.
+
+### 2. Booking & Simulated Transactions
+* **Simulated Checkout:** Clients initiate bookings using simulated payment options (Card Demo, Instant EFT, Demo Balance). No real credit card or bank credentials are required.
+* **Transaction Records:** Each booking creates an immutable transaction record (`transactionId`, `amount`, `currency`, `paymentMethod`, `status`, `paidAt`).
+* **Self-Booking Prevention:** Freelancers are prevented from booking their own gigs.
+* **Income & Spend Tracking:** The system calculates cumulative earnings for freelancers and aggregate spending for clients.
+
+### 3. Frontend Architecture (React)
+* **Single-Page Application (SPA):** Built with React, Vite, and React Router.
+* **Clean UI & Responsive Aesthetics:** Designed with custom CSS variables, accessible color contrasts, responsive grids, and micro-animations.
+* **Session Persistence:** State managed via React Context (`AuthContext`) with automatic token verification against `/api/auth/me`.
+
+---
+
+## Security Implementation
+
+* **HTTPS / TLS 1.3:** Encrypted in-transit communication with local certificates.
+* **Stateless JWT Authentication:** Cryptographically signed tokens using `HS256` with configurable expiry (`1h`).
+* **Role-Based Access Control (RBAC):** Backend route guards (`requireRole`) and frontend protected routes (`ProtectedRoute`) prevent privilege escalation.
+* **Input Sanitization & Injection Prevention:** Inputs are trimmed, script tags stripped, and angle brackets sanitized before reaching business logic.
+* **Targeted Rate Limiting:**
+  * Global API Limiter: 100 requests per 15-minute window (`/api`).
+  * Authentication Limiter: Protects `/api/auth/login` from brute-force attempts while skipping successful logins to avoid session lockouts.
+  * Booking Limiter: Prevents transaction flooding on `POST /api/bookings`.
+* **Security Headers (Helmet):** Configures Content Security Policy (CSP), frame options (anti-clickjacking), and cross-origin resource isolation.
+* **CORS Protection:** Rejects cross-origin requests originating outside the configured `CLIENT_ORIGIN`.
+* **Password Hashing:** Passwords hashed with `bcryptjs` (salt rounds: 12).
+* **Safe Error Handling:** Generic authentication messages prevent user enumeration, and application error details are obscured from client responses.
+
+---
 
 ## Project Structure
 
-* `api/src/index.js` starts the backend application.
-* `api/src/routes` contains the API routes (authentication, gigs).
-* `api/src/controllers` contains request and authentication logic.
-* `api/src/middleware` contains validation, authentication, and error-handling middleware.
-* `api/src/models` contains the user and gig models.
-* `api/tests` contains automated backend tests.
-* `api/certs` stores the local HTTPS certificate files.
-* `client/src` contains the React frontend single-page application (Role 4).
-* `client/src/services` contains the centralized API client and auth service layer.
-* `client/src/context` contains global authentication and session state.
-* `client/src/components` contains protected route guards, navigation, and reusable UI components.
-* `client/src/pages` contains auth pages (Login, Register), home, and role dashboards.
-
-
-## Setup and Installation
-
-### 1. Configure the environment
-
-Create or update the `.env` file in the project root. At minimum, provide a secure `JWT_SECRET`. Generate one in Bash with:
-
-	openssl rand -base64 64
-
-The application also supports `MONGO_URI`, `PORT`, `NODE_ENV`, `USE_HTTPS`, `CLIENT_ORIGIN`, `APP_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` environment variables. Start MongoDB before the API and configure `MONGO_URI` in the root `.env` file (for example, `mongodb://127.0.0.1:27017/hustlehub` for a local MongoDB server).
-
-### 2. Generate local certificates (for Backend HTTPS)
-
-Open Bash in the `api/certs` folder and run:
-
-	MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout localhost-key.pem -out localhost-cert.pem -subj "/CN=localhost"
-
-The certificate files must be named `localhost-key.pem` and `localhost-cert.pem` unless custom paths are provided through `SSL_KEY_PATH` and `SSL_CERT_PATH`.
-
-### 3. Install dependencies
-
-Install API dependencies:
-```bash
-cd api
-npm install
+```
+.
+├── api/
+│   ├── certs/                 # SSL certificate and private key
+│   ├── postman/               # Postman collection & environment for Newman
+│   ├── src/
+│   │   ├── config/            # MongoDB connection
+│   │   ├── controllers/       # Auth, Gig, and Booking business logic
+│   │   ├── middleware/        # Auth, RBAC, Rate limiting, Input validation, Error handler
+│   │   ├── models/            # Mongoose schemas (User, Gig, Booking)
+│   │   ├── routes/            # Express routers (/api/auth, /api/gigs, /api/bookings)
+│   │   └── utils/             # JWT helpers and input sanitizers
+│   └── tests/                 # Jest & Supertest automated backend test suites
+│
+├── client/
+│   ├── src/
+│   │   ├── components/        # Navbar, Footer, BookingModal, Marketplace, ProtectedRoute
+│   │   ├── context/           # AuthContext & session state provider
+│   │   ├── pages/             # Home, Login, Register, Client/Freelancer/Admin Dashboards
+│   │   ├── services/          # Central Axios client and API services (auth, gig, booking)
+│   │   ├── test/              # Vitest & Testing Library frontend component tests
+│   │   └── index.css          # Design system styles and responsive layout
+│   └── vite.config.js         # Vite configuration with HTTPS proxy and Vitest setup
+│
+└── README.md
 ```
 
-Install Client dependencies:
-```bash
-cd ../client
-npm install
+---
+
+## Setup & Running Instructions
+
+### 1. Prerequisites
+* **Node.js** (v18 or higher) and **npm**
+* **MongoDB** instance (local server or MongoDB Atlas URI)
+* **OpenSSL** (for generating local SSL certificates)
+
+### 2. Environment Configuration
+Create a `.env` file in the project root:
+```env
+# Server Configuration
+PORT=4000
+APP_NAME=HustleHub
+NODE_ENV=development
+CLIENT_ORIGIN=http://localhost:5173
+
+# HTTPS Configuration
+USE_HTTPS=true
+SSL_KEY_PATH=api/certs/localhost-key.pem
+SSL_CERT_PATH=api/certs/localhost-cert.pem
+
+# JWT Configuration
+JWT_SECRET=your_secure_random_64_byte_string_here
+JWT_EXPIRES_IN=1h
+SALT_ROUNDS=12
+
+# Admin Credentials (Development Provisioning)
+ADMIN_NAME=HustleHub Administrator
+ADMIN_EMAIL=admin@hustlehub.local
+ADMIN_PASSWORD=AdminPassword123!
+
+# MongoDB Connection
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/hustlehub
 ```
 
-### 4. Run the Backend and Frontend
+### 3. Generate Local SSL Certificates (If Not Present)
+From the root directory:
+```bash
+cd api/certs
+openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 365 -keyout localhost-key.pem -out localhost-cert.pem -subj "/CN=localhost"
+cd ../..
+```
 
-Run each application in its own terminal. Start MongoDB first, and confirm the root `.env` file contains a working `MONGO_URI`. If `USE_HTTPS=true`, ensure the local certificate files from step 2 exist in `api/certs`.
+### 4. Install Dependencies
+```bash
+# Install backend dependencies
+cd api && npm install
 
-**Terminal 1: Backend API** (from the repository root):
+# Install frontend dependencies
+cd ../client && npm install
+```
 
+### 5. Running the Application
+
+**Terminal 1 — Start the Backend Server:**
 ```bash
 cd api
 npm run dev
 ```
+The API starts securely at `https://localhost:4000`.
 
-Wait for the `MongoDB connected successfully` message. With `USE_HTTPS=true`, the API runs at `https://localhost:4000`; otherwise it runs at `http://localhost:4000`.
-
-**Terminal 2: Frontend client** (also from the repository root):
-
+**Terminal 2 — Start the Frontend Client:**
 ```bash
 cd client
-npm install
 npm run dev
 ```
+Open `http://localhost:5173` in your browser. The Vite development server proxies API requests to `https://localhost:4000` automatically.
 
-Open the Vite URL shown in the terminal, normally `http://localhost:5173`. Keep both terminals open while using the application. The Vite development server proxies `/api` and `/health` requests to the API at `https://localhost:4000` and accepts the local self-signed certificate for that proxy connection.
-
-To check the API directly when HTTPS is enabled, run:
-
-```bash
-curl -k https://localhost:4000/health
-```
-
-The `-k` flag allows curl to connect to the locally generated, self-signed certificate. You can also check the API through the frontend proxy at `http://localhost:5173/health`.
-
-## API Endpoints
-
-Authentication routes are available under `/api/auth`:
-
-* `GET /api/auth/status` checks that the authentication routes are available.
-* `POST /api/auth/register` registers a client or freelancer.
-* `POST /api/auth/login` authenticates a user and returns a JWT.
-* `GET /api/auth/me` returns the authenticated user's profile.
-* `GET /api/auth/client-area` requires the `client` role.
-* `GET /api/auth/freelancer-area` requires the `freelancer` role.
-* `GET /api/auth/admin-area` requires the `admin` role.
-
-Protected endpoints require the JWT in the request's Authorization header using the Bearer scheme.
-
-The admin account is provisioned privately from environment variables when `NODE_ENV=development`. It is not available through public registration.
+---
 
 ## Testing Procedures
 
-### Run the automated API tests
-
-1. Open a terminal in the repository root and enter the API folder:
-
-	```bash
-	cd api
-	```
-
-2. Install the API dependencies if this is a fresh checkout:
-
-	```bash
-	npm install
-	```
-
-3. Run the Jest and Supertest suite:
-
-	```bash
-	npm test -- --runInBand
-	```
-
-The current suite contains 10 tests for authentication route status and registration/login validation. It does not require the API server or MongoDB to be running. A successful run reports `Tests: 10 passed, 10 total`.
-
-### Generate test coverage
-
-From the `api` folder, run:
-
+### 1. Backend Automated Tests (Jest & Supertest)
+Runs unit and integration tests covering authentication validation, gig ownership, and booking transactions:
+```bash
+cd api
+npm test
+```
+To generate a code coverage report:
 ```bash
 npm run test:coverage
 ```
 
-Jest prints a coverage summary and writes its coverage output under `api/coverage`.
+### 2. Frontend Automated Tests (Vitest & React Testing Library)
+Runs automated UI tests verifying component rendering, input validation, role selection, and user interactions:
+```bash
+cd client
+npm test
+```
 
-### Run the Postman API collection with Newman
+### 3. Postman / Newman API Integration Tests
+Runs the end-to-end API collection through Newman:
+```bash
+cd api
+npm run test:api
+```
 
-The workspace includes a Postman export under the root `postman` folder, but those files are stored as individual request and environment exports rather than a single JSON collection file. Newman can run an exported collection once it has been generated as a collection file.
+---
 
-1. Install Newman if it is not already available:
+## API Endpoints Summary
 
-	```bash
-	npm install -g newman
-	```
+### Authentication (`/api/auth`)
+* `GET /api/auth/status` — API status and supported roles.
+* `POST /api/auth/register` — Register a client or freelancer account.
+* `POST /api/auth/login` — Authenticate and receive signed JWT (rate-limited).
+* `GET /api/auth/me` — Retrieve current authenticated user session (JWT required).
+* `GET /api/auth/client-area` — Client RBAC verification.
+* `GET /api/auth/freelancer-area` — Freelancer RBAC verification.
+* `GET /api/auth/admin-area` — Admin RBAC verification.
 
-	or use the one-off command form without a global install:
+### Gigs (`/api/gigs`)
+* `GET /api/gigs` — Browse all active marketplace gigs.
+* `GET /api/gigs/:id` — View single gig details.
+* `GET /api/gigs/mine` — View all gigs owned by authenticated freelancer (Freelancer only).
+* `POST /api/gigs` — Create a new service listing (Freelancer only).
+* `PUT /api/gigs/:id` — Update own gig listing (Freelancer only).
+* `DELETE /api/gigs/:id` — Delete own gig listing (Freelancer only).
 
-	```bash
-	npx newman --version
-	```
+### Bookings & Transactions (`/api/bookings`)
+* `POST /api/bookings` — Book a gig with simulated payment (Client only, rate-limited).
+* `GET /api/bookings/client` — View client's bookings and spend stats (Client only).
+* `GET /api/bookings/freelancer` — View received orders and earned income (Freelancer only).
+* `GET /api/bookings/admin/all` — Platform-wide transaction audit (Admin only).
+* `GET /api/bookings/:id` — View booking details (Authorized users only).
+* `PATCH /api/bookings/:id/status` — Update order status (in_progress, completed, cancelled).
 
-2. Ensure MongoDB is running and `MONGO_URI` is configured in the root `.env` file.
-
-3. Start the API in one terminal:
-
-	```bash
-	cd api
-	npm run dev
-	```
-
-4. In a second terminal, export the collection from Postman as JSON or YAML, then run it with Newman. For example:
-
-	```bash
-	cd /path/to/project
-	newman run ./postman/collections/"HustleHub+ API".json \
-	  --environment ./postman/environments/"HustleHub+ Local.environment".json \
-	  --globals ./postman/globals/workspace.globals.json \
-	  --insecure
-	```
-
-	If the collection is saved as a YAML file instead of JSON, the same command works with the YAML file path. Use `--insecure` because the local API uses a self-signed HTTPS certificate in development.
-
-5. You can also run the project script from the API folder if a valid collection file is added there:
-
-	```bash
-	cd api
-	npm run test:api
-	```
-
-	This script expects the collection and environment files to exist in the `api/postman` folder and will fail on a fresh checkout until those files are created or exported.
-
-### Lint check
-
-`npm run lint` is declared to run ESLint on `api/src/`, but ESLint is not currently installed as an API dependency. The command will fail on a clean setup until ESLint is added.
-
-## Security Decisions
-
-The following security decisions were made to protect user accounts, requests, and API resources:
-
-* **Password hashing:** Passwords are hashed with bcryptjs before they are stored. This means the application does not store users' passwords as readable text, reducing the impact of a database exposure (OWASP, 2024a).
-* **Token-based authentication:** Successful login returns a signed JSON Web Token (JWT). Protected routes verify the token before allowing access, so the API can authenticate requests without sending a password with every request (Jones, Bradley and Sakimura, 2015).
-* **Role-based access control:** Client, freelancer, and admin areas are protected by role checks. This follows the principle of least privilege by allowing users to access only the resources intended for their role (NIST, 2020).
-* **Input validation:** Registration and login input is validated before controller logic runs. Validation helps reject missing, malformed, or unsafe input and makes API responses more predictable (OWASP, 2024b).
-* **HTTPS:** HTTPS encrypts data in transit, including login credentials and JWTs, and helps prevent attackers on the network from reading or modifying requests. Local certificates are used for development testing (IETF, 2018).
-* **Security headers:** Helmet adds protective HTTP headers, including Content Security Policy, to reduce browser-based risks such as content injection and clickjacking (Helmet, 2025).
-* **Restricted CORS:** Requests are accepted only from the configured frontend origin. This prevents unauthorised browser-based applications from making cross-origin requests to the API (MDN Web Docs, 2025).
-* **Request-size limits:** JSON and URL-encoded request bodies are limited to 10 KB. This reduces unnecessary resource consumption from oversized requests (OWASP, 2024c).
-* **Generic login errors:** Unknown emails and incorrect passwords return the same message. This makes it harder to discover which email addresses have accounts (OWASP, 2024d).
-* **Controlled error handling:** Invalid routes and unexpected errors receive controlled responses instead of exposing internal implementation details.
+---
 
 ## References
 
-The following sources support the security principles applied in this project. Accessed 22 August 2026.
-
-* Helmet (2025) *Helmet documentation*. Available at: https://helmetjs.github.io/
-* IETF (2018) *The Transport Layer Security (TLS) Protocol Version 1.3 (RFC 8446)*. Available at: https://www.rfc-editor.org/rfc/rfc8446
-* Jones, M., Bradley, J. and Sakimura, N. (2015) *JSON Web Token (JWT) (RFC 7519)*. IETF. Available at: https://www.rfc-editor.org/rfc/rfc7519
-* MDN Web Docs (2025) *CORS (Cross-Origin Resource Sharing)*. Available at: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
-* NIST (2020) *Security and Privacy Controls for Information Systems and Organizations (SP 800-53 Rev. 5)*. Available at: https://doi.org/10.6028/NIST.SP.800-53r5
-* OWASP (2024a) *Password Storage Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
-* OWASP (2024b) *Input Validation Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
-* OWASP (2024c) *Denial of Service Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html
-* OWASP (2024d) *Authentication Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
-
-## Technologies
-
-* JavaScript
-* Node.js
-* Express.js
-* Jest and Supertest
-* Newman
-* JSON Web Tokens
-* bcryptjs
-* Helmet
-* CORS
-* HTTPS and OpenSSL
+* **Helmet (2025)** *Helmet security documentation*. Available at: https://helmetjs.github.io/
+* **IETF (2018)** *The Transport Layer Security (TLS) Protocol Version 1.3 (RFC 8446)*. Available at: https://www.rfc-editor.org/rfc/rfc8446
+* **Jones, M., Bradley, J. and Sakimura, N. (2015)** *JSON Web Token (JWT) (RFC 7519)*. IETF. Available at: https://www.rfc-editor.org/rfc/rfc7519
+* **MDN Web Docs (2025)** *CORS (Cross-Origin Resource Sharing)*. Available at: https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+* **NIST (2020)** *Security and Privacy Controls for Information Systems and Organizations (SP 800-53 Rev. 5)*. Available at: https://doi.org/10.6028/NIST.SP.800-53r5
+* **OWASP (2024a)** *Password Storage Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+* **OWASP (2024b)** *Input Validation Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
+* **OWASP (2024c)** *Denial of Service Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html
+* **OWASP (2024d)** *Authentication Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html

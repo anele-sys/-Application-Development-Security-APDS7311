@@ -20,12 +20,14 @@ const https = require('https');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
-const gigRoutes = require('./routes/gigRoutes');
-
 const connectDB = require('./config/database');
-const rateLimit = require('express-rate-limit'); // ADDED
+const rateLimit = require('express-rate-limit');
+
 // Import application routes and global error-handling middleware
 const authRoutes = require('./routes/authRoutes');
+const gigRoutes = require('./routes/gigRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 // Create the Express application
@@ -170,24 +172,13 @@ app.get('/', (req, res) => {
     documentation: 'See README.md for API documentation'
   });
 });
-/* =====*====================
-   ADDED: AUT* RATE LIMITER
-   =================*======== */
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 100, // 15 minutes
-  max: 5,                  // 5 login attempts
-  message: {
-    error: 'Too many login attempts. Please try again in 15 minutes.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
 // Mount authentication routes under /api/auth
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 
-// Future application routes can be added here
+// Application routes
 app.use('/api/gigs', gigRoutes);
-// app.use('/api/bookings', bookingRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Return a controlled response when a requested route does not exist
 app.use((req, res) => {

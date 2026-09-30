@@ -161,10 +161,159 @@ const validateLogin = (req, res, next) => {
 };
 
 // ============================================================
+// GIG VALIDATION
+// ============================================================
+
+const validateCreateGig = (req, res, next) => {
+  let { title, description, category, price } = req.body;
+
+  title = sanitiseString(title);
+  description = sanitiseString(description);
+  category = sanitiseString(category);
+  const numPrice = Number(price);
+
+  if (!title || title.length < 3 || title.length > 100) {
+    return res.status(400).json({
+      success: false,
+      message: 'Title is required and must be between 3 and 100 characters',
+    });
+  }
+
+  if (!description || description.length < 10 || description.length > 2000) {
+    return res.status(400).json({
+      success: false,
+      message: 'Description is required and must be between 10 and 2000 characters',
+    });
+  }
+
+  if (!category || category.length > 100) {
+    return res.status(400).json({
+      success: false,
+      message: 'Category is required (maximum 100 characters)',
+    });
+  }
+
+  if (isNaN(numPrice) || numPrice < 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Price must be a valid positive number',
+    });
+  }
+
+  req.body.title = title;
+  req.body.description = description;
+  req.body.category = category;
+  req.body.price = numPrice;
+
+  next();
+};
+
+const validateUpdateGig = (req, res, next) => {
+  let { title, description, category, price, status } = req.body;
+
+  if (title !== undefined) {
+    title = sanitiseString(title);
+    if (title.length < 3 || title.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title must be between 3 and 100 characters',
+      });
+    }
+    req.body.title = title;
+  }
+
+  if (description !== undefined) {
+    description = sanitiseString(description);
+    if (description.length < 10 || description.length > 2000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description must be between 10 and 2000 characters',
+      });
+    }
+    req.body.description = description;
+  }
+
+  if (category !== undefined) {
+    category = sanitiseString(category);
+    if (!category || category.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Category must be non-empty and up to 100 characters',
+      });
+    }
+    req.body.category = category;
+  }
+
+  if (price !== undefined) {
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Price must be a valid positive number',
+      });
+    }
+    req.body.price = numPrice;
+  }
+
+  if (status !== undefined) {
+    if (!['active', 'inactive'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be either 'active' or 'inactive'",
+      });
+    }
+  }
+
+  next();
+};
+
+// ============================================================
+// BOOKING VALIDATION
+// ============================================================
+
+const validateCreateBooking = (req, res, next) => {
+  let { gigId, requirements, paymentMethod } = req.body;
+
+  if (!gigId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Gig ID is required to create a booking',
+    });
+  }
+
+  if (requirements) {
+    requirements = sanitiseString(requirements);
+    if (requirements.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Requirements description cannot exceed 1000 characters',
+      });
+    }
+    req.body.requirements = requirements;
+  } else {
+    req.body.requirements = '';
+  }
+
+  if (paymentMethod && !['simulated_card', 'instant_eft', 'demo_wallet'].includes(paymentMethod)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid payment method selected',
+    });
+  }
+
+  req.body.paymentMethod = paymentMethod || 'simulated_card';
+
+  next();
+};
+
+// ============================================================
 // EXPORTS
 // ============================================================
 
 module.exports = {
   validateRegistration,
-  validateLogin
+  validateLogin,
+  validateCreateGig,
+  validateUpdateGig,
+  validateCreateBooking,
 };

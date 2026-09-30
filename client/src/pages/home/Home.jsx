@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import GigMarketplace from '../../components/marketplace/GigMarketplace';
 
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
@@ -95,6 +96,17 @@ const Home = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Public Marketplace Explorer */}
+      <section className="container" style={{ marginTop: '3rem', marginBottom: '3rem' }}>
+        <div className="section-header" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+          <h2 className="section-title">Explore Freelance Gigs</h2>
+          <p className="section-subtitle">
+            Discover verified skills and services ready for immediate booking.
+          </p>
+        </div>
+        <GigMarketplace />
       </section>
     </div>
   );

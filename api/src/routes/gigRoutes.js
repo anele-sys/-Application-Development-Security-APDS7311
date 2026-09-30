@@ -16,6 +16,11 @@ const {
   requireRole
 } = require('../middleware/authMiddleware');
 
+const {
+  validateCreateGig,
+  validateUpdateGig,
+} = require('../middleware/validateInput');
+
 // Anyone can browse active gigs
 router.get('/', getGigs);
 
@@ -35,6 +40,7 @@ router.post(
   '/',
   authenticateToken,
   requireRole('freelancer'),
+  validateCreateGig,
   createGig
 );
 
@@ -43,6 +49,7 @@ router.put(
   '/:id',
   authenticateToken,
   requireRole('freelancer'),
+  validateUpdateGig,
   updateGig
 );
 

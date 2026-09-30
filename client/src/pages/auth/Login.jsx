@@ -57,19 +57,22 @@ const Login = () => {
       const response = await login(formData.email.trim(), formData.password);
       const user = response.user;
 
-      // Check if user was redirected from a protected route
+      // Determine user dashboard based on role
+      const roleDashboards = {
+        freelancer: '/freelancer-dashboard',
+        admin: '/admin-dashboard',
+        client: '/client-dashboard',
+      };
+      const userDashboard = roleDashboards[user.role] || '/client-dashboard';
+
+      // Check if user was redirected from a general protected route
       const destination = location.state?.from?.pathname;
-      if (destination) {
+      const isRoleSpecificDashboard = Object.values(roleDashboards).includes(destination);
+
+      if (destination && !isRoleSpecificDashboard) {
         navigate(destination, { replace: true });
       } else {
-        // Redirect based on user's role
-        if (user.role === 'freelancer') {
-          navigate('/freelancer-dashboard', { replace: true });
-        } else if (user.role === 'admin') {
-          navigate('/admin-dashboard', { replace: true });
-        } else {
-          navigate('/client-dashboard', { replace: true });
-        }
+        navigate(userDashboard, { replace: true });
       }
     } catch (err) {
       setServerError(err.message || 'Login failed. Please verify your credentials.');
