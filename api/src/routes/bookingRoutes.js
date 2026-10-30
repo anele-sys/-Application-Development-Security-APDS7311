@@ -6,6 +6,8 @@ const {
   createBooking,
   getClientBookings,
   getFreelancerBookings,
+  getFreelancerIncomeAnalytics,
+  simulateFreelancerTax,
   getBookingById,
   updateBookingStatus,
   getAllBookingsAdmin,
@@ -56,6 +58,22 @@ router.get(
   authenticateToken,
   requireRole('freelancer'),
   getFreelancerBookings
+);
+
+// Freelancer income analytics & tax aggregation
+router.get(
+  '/freelancer/income-analytics',
+  authenticateToken,
+  requireRole('freelancer'),
+  getFreelancerIncomeAnalytics
+);
+
+// Freelancer interactive tax & deductible expense simulator
+router.post(
+  '/freelancer/tax-simulate',
+  authenticateToken,
+  requireRole('freelancer'),
+  simulateFreelancerTax
 );
 
 // Admin views all bookings across the platform

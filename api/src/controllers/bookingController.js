@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Gig = require('../models/Gig');
+const { calculateTax, aggregateFreelancerIncome } = require('../utils/taxCalculator');
 
 // Generate unique, readable transaction reference
 const generateTransactionId = () => {
@@ -122,6 +123,7 @@ const getFreelancerBookings = async (req, res, next) => {
 
     const activeCount = bookings.filter((b) => ['pending', 'in_progress'].includes(b.status)).length;
     const completedCount = bookings.filter((b) => b.status === 'completed').length;
+    const taxEstimate = calculateTax(totalEarned);
 
     return res.status(200).json({
       success: true,
@@ -131,6 +133,14 @@ const getFreelancerBookings = async (req, res, next) => {
         totalOrders: bookings.length,
         activeOrders: activeCount,
         completedOrders: completedCount,
+        taxEstimate: {
+          taxableIncome: taxEstimate.taxableIncome,
+          netTaxPayable: taxEstimate.netTaxPayable,
+          effectiveTaxRate: taxEstimate.effectiveTaxRate,
+          netTakeHomePay: taxEstimate.netTakeHomePay,
+          marginalTaxRatePercent: taxEstimate.marginalTaxRatePercent,
+          isBelowThreshold: taxEstimate.isBelowThreshold,
+        },
       },
       bookings,
     });
@@ -262,10 +272,64 @@ const getAllBookingsAdmin = async (req, res, next) => {
   }
 };
 
+/**
+ * Get comprehensive income aggregation and SARS tax calculations for authenticated Freelancer
+ * Role: Freelancer
+ */
+const getFreelancerIncomeAnalytics = async (req, res, next) => {
+  try {
+    const deductibleExpenses = Number(req.query.deductions) || 0;
+
+    const bookings = await Booking.find({ freelancer: req.user.id })
+      .populate('gig', 'title category price status')
+      .populate('client', 'name email')
+      .sort({ createdAt: -1 });
+
+    const analytics = aggregateFreelancerIncome(bookings, { deductibleExpenses });
+
+    return res.status(200).json({
+      success: true,
+      analytics,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Interactive tax and deduction simulator
+ * Role: Freelancer
+ */
+const simulateFreelancerTax = async (req, res, next) => {
+  try {
+    const { grossIncome, deductibleExpenses } = req.body;
+    const income = Number(grossIncome);
+    const expenses = Number(deductibleExpenses) || 0;
+
+    if (isNaN(income) || income < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Gross income must be a valid non-negative number',
+      });
+    }
+
+    const simulation = calculateTax(income, { deductibleExpenses: expenses });
+
+    return res.status(200).json({
+      success: true,
+      simulation,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createBooking,
   getClientBookings,
   getFreelancerBookings,
+  getFreelancerIncomeAnalytics,
+  simulateFreelancerTax,
   getBookingById,
   updateBookingStatus,
   getAllBookingsAdmin,
