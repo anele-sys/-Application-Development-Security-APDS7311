@@ -12,6 +12,13 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  TrendingUp,
+  Search,
+  Filter,
+  Eye,
+  EyeOff,
+  Tag,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
@@ -19,6 +26,7 @@ import gigService from '../../services/gigService';
 import bookingService from '../../services/bookingService';
 import Alert from '../../components/common/Alert';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import IncomeTaxDashboard from '../../components/dashboard/IncomeTaxDashboard';
 
 const emptyGig = {
   title: '',
@@ -54,6 +62,9 @@ const FreelancerDashboard = () => {
   const [formData, setFormData] = useState(emptyGig);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [listingSearch, setListingSearch] = useState('');
+  const [listingStatusFilter, setListingStatusFilter] = useState('all');
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const loadFreelancerData = async () => {
     try {
@@ -92,6 +103,7 @@ const FreelancerDashboard = () => {
   const resetForm = () => {
     setEditingGigId(null);
     setFormData(emptyGig);
+    setIsFormOpen(false);
   };
 
   const handleSubmit = async (event) => {
@@ -138,9 +150,32 @@ const FreelancerDashboard = () => {
       price: String(gig.price),
       status: gig.status,
     });
+    setIsFormOpen(true);
     setError(null);
     setNotice(null);
     setActiveTab('gigs');
+    window.scrollTo({ top: 320, behavior: 'smooth' });
+  };
+
+  const toggleGigStatus = async (gig) => {
+    const newStatus = gig.status === 'active' ? 'inactive' : 'active';
+    try {
+      const { gig: updated } = await gigService.update(gig._id, {
+        title: gig.title,
+        description: gig.description,
+        category: gig.category,
+        price: Number(gig.price),
+        status: newStatus,
+      });
+      setGigs((currentGigs) =>
+        currentGigs.map((g) => (g._id === gig._id ? updated : g))
+      );
+      setNotice(
+        `Listing "${gig.title}" is now ${newStatus === 'active' ? 'Live on Marketplace (Active)' : 'Hidden (Inactive)'}.`
+      );
+    } catch (err) {
+      setError(err.message || 'Could not change listing visibility.');
+    }
   };
 
   const removeGig = async (gig) => {
@@ -183,6 +218,18 @@ const FreelancerDashboard = () => {
   }
 
   const activeGigs = gigs.filter((gig) => gig.status === 'active').length;
+
+  const filteredGigs = gigs.filter((gig) => {
+    const matchesStatus =
+      listingStatusFilter === 'all' || gig.status === listingStatusFilter;
+    const query = (listingSearch || '').toLowerCase().trim();
+    const matchesSearch =
+      query === '' ||
+      gig.title?.toLowerCase().includes(query) ||
+      gig.category?.toLowerCase().includes(query) ||
+      gig.description?.toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div>
@@ -266,59 +313,152 @@ const FreelancerDashboard = () => {
             <ShoppingBag size={16} />
             Client Orders &amp; Income ({bookings.length})
           </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'tax' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tax')}
+          >
+            <TrendingUp size={16} />
+            Tax &amp; Financial Insights
+          </button>
         </div>
 
         {/* Tab 1: Manage Gigs */}
         {activeTab === 'gigs' && (
           <section className="gig-manager" aria-labelledby="gig-manager-title">
-            <div className="gig-manager-grid">
-              {/* Form */}
-              <form className="card gig-form" onSubmit={handleSubmit}>
+            {/* Header Toolbar */}
+            <div className="listings-toolbar-card">
+              <div className="listings-toolbar-left">
+                <div className="listings-search-box">
+                  <Search size={16} className="text-muted" />
+                  <input
+                    type="text"
+                    className="listings-search-input"
+                    placeholder="Filter your listings by title, skill, or keyword..."
+                    value={listingSearch}
+                    onChange={(e) => setListingSearch(e.target.value)}
+                  />
+                  {listingSearch && (
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => setListingSearch('')}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="filter-pill-group">
+                  <button
+                    type="button"
+                    className={`filter-pill ${listingStatusFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setListingStatusFilter('all')}
+                  >
+                    All ({gigs.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`filter-pill ${listingStatusFilter === 'active' ? 'active' : ''}`}
+                    onClick={() => setListingStatusFilter('active')}
+                  >
+                    <span className="dot dot-active" /> Active ({activeGigs})
+                  </button>
+                  <button
+                    type="button"
+                    className={`filter-pill ${listingStatusFilter === 'inactive' ? 'active' : ''}`}
+                    onClick={() => setListingStatusFilter('inactive')}
+                  >
+                    <span className="dot dot-inactive" /> Inactive ({gigs.length - activeGigs})
+                  </button>
+                </div>
+              </div>
+
+              <div className="listings-toolbar-right">
+                <button
+                  type="button"
+                  className={`btn ${isFormOpen ? 'btn-secondary' : 'btn-primary'}`}
+                  onClick={() => {
+                    if (isFormOpen && !editingGigId) {
+                      setIsFormOpen(false);
+                    } else {
+                      resetForm();
+                      setIsFormOpen(true);
+                    }
+                  }}
+                >
+                  {isFormOpen ? (
+                    <>
+                      <X size={16} /> Close Form
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} /> Create New Gig
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Create / Edit Form Card */}
+            {isFormOpen && (
+              <form className="card gig-form-card" onSubmit={handleSubmit}>
                 <div className="gig-form-heading">
-                  <h3>{editingGigId ? 'Edit Gig Listing' : 'Create a New Gig'}</h3>
-                  <p>
-                    {editingGigId
-                      ? 'Update listing specifications or change visibility.'
-                      : 'Publish a service offering to the HustleHub+ marketplace.'}
-                  </p>
+                  <div>
+                    <h3>{editingGigId ? 'Edit Service Listing' : 'Publish New Service Listing'}</h3>
+                    <p>
+                      {editingGigId
+                        ? 'Update listing specifications, pricing, or visibility.'
+                        : 'Showcase your skills and start receiving client orders.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={resetForm}
+                  >
+                    <X size={15} /> Cancel
+                  </button>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="gig-title">
-                    Title
-                  </label>
-                  <input
-                    className="form-input"
-                    id="gig-title"
-                    name="title"
-                    value={formData.title}
-                    onChange={(event) => setFormData({ ...formData, title: event.target.value })}
-                    minLength={3}
-                    maxLength={100}
-                    placeholder="e.g. Modern React &amp; Node.js Full-Stack App"
-                    required
-                  />
-                </div>
+                <div className="form-grid-2col">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="gig-title">
+                      Listing Title
+                    </label>
+                    <input
+                      className="form-input"
+                      id="gig-title"
+                      name="title"
+                      value={formData.title}
+                      onChange={(event) => setFormData({ ...formData, title: event.target.value })}
+                      minLength={3}
+                      maxLength={100}
+                      placeholder="e.g. Modern Full-Stack Web Development (React & Node.js)"
+                      required
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="gig-category">
-                    Category
-                  </label>
-                  <input
-                    className="form-input"
-                    id="gig-category"
-                    name="category"
-                    value={formData.category}
-                    onChange={(event) => setFormData({ ...formData, category: event.target.value })}
-                    maxLength={100}
-                    placeholder="e.g. Web Development, UI/UX Design, Security"
-                    required
-                  />
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="gig-category">
+                      Service Category
+                    </label>
+                    <input
+                      className="form-input"
+                      id="gig-category"
+                      name="category"
+                      value={formData.category}
+                      onChange={(event) => setFormData({ ...formData, category: event.target.value })}
+                      maxLength={100}
+                      placeholder="e.g. Web Development, UI/UX Design, Security Audit"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
                   <label className="form-label" htmlFor="gig-description">
-                    Description
+                    Service Scope &amp; Deliverables
                   </label>
                   <textarea
                     className="form-textarea gig-description-input"
@@ -331,33 +471,33 @@ const FreelancerDashboard = () => {
                     minLength={10}
                     maxLength={2000}
                     rows={4}
-                    placeholder="Detail the deliverable, scope, and expertise provided..."
+                    placeholder="Describe exactly what deliverables the client receives, technologies used, revisions included, and delivery expectations..."
                     required
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="gig-price">
-                    Price (ZAR)
-                  </label>
-                  <input
-                    className="form-input"
-                    id="gig-price"
-                    name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(event) => setFormData({ ...formData, price: event.target.value })}
-                    placeholder="e.g. 1500"
-                    required
-                  />
-                </div>
+                <div className="form-grid-2col">
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="gig-price">
+                      Fixed Price (ZAR)
+                    </label>
+                    <input
+                      className="form-input"
+                      id="gig-price"
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(event) => setFormData({ ...formData, price: event.target.value })}
+                      placeholder="e.g. 2500"
+                      required
+                    />
+                  </div>
 
-                {editingGigId && (
                   <div className="form-group">
                     <label className="form-label" htmlFor="gig-status">
-                      Visibility
+                      Visibility Status
                     </label>
                     <select
                       className="form-select"
@@ -366,83 +506,152 @@ const FreelancerDashboard = () => {
                       value={formData.status}
                       onChange={(event) => setFormData({ ...formData, status: event.target.value })}
                     >
-                      <option value="active">Active (Public)</option>
-                      <option value="inactive">Inactive (Hidden)</option>
+                      <option value="active">Active (Discoverable on Marketplace)</option>
+                      <option value="inactive">Inactive (Hidden Draft)</option>
                     </select>
                   </div>
-                )}
+                </div>
 
                 <div className="gig-form-actions">
                   <button className="btn btn-primary" type="submit" disabled={isSaving}>
                     {editingGigId ? <Save size={16} /> : <Plus size={16} />}
-                    {isSaving ? 'Saving...' : editingGigId ? 'Save Changes' : 'Publish Gig'}
+                    {isSaving ? 'Saving...' : editingGigId ? 'Save Changes' : 'Publish Listing'}
                   </button>
-                  {editingGigId && (
-                    <button className="btn btn-secondary" type="button" onClick={resetForm}>
-                      <X size={16} />
-                      Cancel
+                  <button className="btn btn-secondary" type="button" onClick={resetForm}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Listings Grid */}
+            <div className="listings-grid-wrapper">
+              <div className="listings-section-header">
+                <div>
+                  <h3 id="gig-list-title">
+                    Your Listings <span>{filteredGigs.length}</span>
+                  </h3>
+                  <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+                    {listingSearch || listingStatusFilter !== 'all'
+                      ? `Showing ${filteredGigs.length} of ${gigs.length} total listings`
+                      : 'Manage your active offerings and pricing for marketplace clients.'}
+                  </p>
+                </div>
+              </div>
+
+              {filteredGigs.length === 0 ? (
+                <div className="gig-empty-state">
+                  <Briefcase size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem' }} />
+                  <h4>{gigs.length === 0 ? 'No listings created yet' : 'No matching listings found'}</h4>
+                  <p>
+                    {gigs.length === 0
+                      ? 'Publish your first freelance service listing to start earning and receiving client orders.'
+                      : 'Try adjusting your search terms or filter criteria.'}
+                  </p>
+                  {gigs.length === 0 ? (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setIsFormOpen(true)}
+                      style={{ marginTop: '0.75rem' }}
+                    >
+                      <Plus size={15} /> Create Your First Gig
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        setListingSearch('');
+                        setListingStatusFilter('all');
+                      }}
+                      style={{ marginTop: '0.75rem' }}
+                    >
+                      Reset Filters
                     </button>
                   )}
                 </div>
-              </form>
-
-              {/* Listings */}
-              <section className="gig-list" aria-labelledby="gig-list-title">
-                <div className="gig-list-heading">
-                  <h3 id="gig-list-title">
-                    Your Listings <span>{gigs.length}</span>
-                  </h3>
-                </div>
-
-                {gigs.length === 0 ? (
-                  <div className="gig-empty-state">
-                    <Briefcase size={28} />
-                    <h4>No listings yet</h4>
-                    <p>Create your first gig listing to receive client orders.</p>
-                  </div>
-                ) : (
-                  <ul className="gig-items">
-                    {gigs.map((gig) => (
-                      <li className="gig-item" key={gig._id}>
-                        <div className="gig-item-topline">
-                          <div>
-                            <p className="gig-category">{gig.category}</p>
-                            <h4>{gig.title}</h4>
-                          </div>
-                          <span className={`gig-status gig-status-${gig.status}`}>
-                            {gig.status}
+              ) : (
+                <div className="freelancer-gig-cards-grid">
+                  {filteredGigs.map((gig) => {
+                    const isEditing = editingGigId === gig._id;
+                    return (
+                      <div
+                        className={`freelancer-gig-card ${isEditing ? 'card-editing' : ''}`}
+                        key={gig._id}
+                      >
+                        {/* Top Category and Status Row */}
+                        <div className="card-top-row">
+                          <span className="card-category-badge">
+                            <Tag size={12} style={{ marginRight: 4 }} />
+                            {gig.category}
+                          </span>
+                          <span
+                            className={`card-status-badge status-${gig.status}`}
+                            title={`Status is ${gig.status}`}
+                          >
+                            <span className={`status-dot ${gig.status === 'active' ? 'dot-active' : 'dot-inactive'}`} />
+                            {gig.status === 'active' ? 'Active' : 'Inactive'}
                           </span>
                         </div>
-                        <p className="gig-item-description">{gig.description}</p>
-                        <div className="gig-item-footer">
-                          <strong>{formatPrice(gig.price)}</strong>
-                          <div className="gig-item-actions">
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              type="button"
-                              onClick={() => editGig(gig)}
-                              aria-label={`Edit ${gig.title}`}
-                            >
-                              <Pencil size={15} />
-                              Edit
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              type="button"
-                              onClick={() => removeGig(gig)}
-                              disabled={deletingGigId === gig._id}
-                              aria-label={`Delete ${gig.title}`}
-                            >
-                              <Trash2 size={15} />
-                              {deletingGigId === gig._id ? 'Deleting...' : 'Delete'}
-                            </button>
+
+                        {/* Title and Description */}
+                        <h4 className="card-gig-title">{gig.title}</h4>
+                        <p className="card-gig-description">{gig.description}</p>
+
+                        {/* Price Banner */}
+                        <div className="card-price-row">
+                          <div>
+                            <span className="price-label">Price</span>
+                            <div className="price-amount">{formatPrice(gig.price)}</div>
                           </div>
+                          <button
+                            type="button"
+                            className="btn-status-toggle"
+                            onClick={() => toggleGigStatus(gig)}
+                            title={gig.status === 'active' ? 'Click to hide listing' : 'Click to make public'}
+                          >
+                            {gig.status === 'active' ? (
+                              <>
+                                <Eye size={14} className="text-success" />
+                                <span>Public</span>
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff size={14} className="text-muted" />
+                                <span>Hidden</span>
+                              </>
+                            )}
+                          </button>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
+
+                        {/* Card Actions */}
+                        <div className="card-actions-row">
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            type="button"
+                            onClick={() => editGig(gig)}
+                            aria-label={`Edit ${gig.title}`}
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            type="button"
+                            onClick={() => removeGig(gig)}
+                            disabled={deletingGigId === gig._id}
+                            aria-label={`Delete ${gig.title}`}
+                          >
+                            <Trash2 size={14} />
+                            {deletingGigId === gig._id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -535,6 +744,9 @@ const FreelancerDashboard = () => {
             )}
           </div>
         )}
+
+        {/* Tab 3: Tax & Financial Insights */}
+        {activeTab === 'tax' && <IncomeTaxDashboard />}
       </div>
     </div>
   );

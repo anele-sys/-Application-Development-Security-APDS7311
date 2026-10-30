@@ -36,6 +36,14 @@ Users cannot access, modify, or delete resources that do not belong to them.
 * **Clean UI & Responsive Aesthetics:** Designed with custom CSS variables, accessible color contrasts, responsive grids, and micro-animations.
 * **Session Persistence:** State managed via React Context (`AuthContext`) with automatic token verification against `/api/auth/me`.
 
+### 4. Freelancer Financial Intelligence & Tax Engine
+* **Automated Income Aggregation:** Tracks realized revenue from completed contracts and pending income from in-progress orders.
+* **SARS Progressive Tax Estimation:** Calculates accurate statutory income tax obligations based on South African Revenue Service (SARS) progressive tax brackets.
+* **Marginal vs. Effective Rate Analysis:** Dynamically differentiates between marginal bracket tiers and the actual effective tax percentage.
+* **Visual Financial Dashboards:** Interactive monthly revenue-versus-tax trend charts and service category distribution visualizations.
+* **Provisional Tax Deadlines (IRP6):** Automatically breaks down bi-annual provisional tax payments for August and February.
+* **Interactive Expense Simulator:** Freelancers can simulate Section 11(a) business expense deductions in real-time to preview tax savings and optimize filings.
+
 ---
 
 ## Security Implementation
@@ -64,21 +72,21 @@ Users cannot access, modify, or delete resources that do not belong to them.
 │   ├── postman/               # Postman collection & environment for Newman
 │   ├── src/
 │   │   ├── config/            # MongoDB connection
-│   │   ├── controllers/       # Auth, Gig, and Booking business logic
+│   │   ├── controllers/       # Auth, Gig, Booking, and Tax Analytics logic
 │   │   ├── middleware/        # Auth, RBAC, Rate limiting, Input validation, Error handler
 │   │   ├── models/            # Mongoose schemas (User, Gig, Booking)
 │   │   ├── routes/            # Express routers (/api/auth, /api/gigs, /api/bookings)
-│   │   └── utils/             # JWT helpers and input sanitizers
-│   └── tests/                 # Jest & Supertest automated backend test suites
+│   │   └── utils/             # Tax calculator, JWT helpers, and input sanitizers
+│   └── tests/                 # Jest & Supertest automated backend test suites (30 tests)
 │
 ├── client/
 │   ├── src/
-│   │   ├── components/        # Navbar, Footer, BookingModal, Marketplace, ProtectedRoute
+│   │   ├── components/        # Navbar, Footer, BookingModal, Marketplace, IncomeTaxDashboard
 │   │   ├── context/           # AuthContext & session state provider
 │   │   ├── pages/             # Home, Login, Register, Client/Freelancer/Admin Dashboards
 │   │   ├── services/          # Central Axios client and API services (auth, gig, booking)
-│   │   ├── test/              # Vitest & Testing Library frontend component tests
-│   │   └── index.css          # Design system styles and responsive layout
+│   │   ├── test/              # Vitest & Testing Library frontend component tests (12 tests)
+│   │   └── index.css          # Design system styles, chart visuals, and print stylesheet
 │   └── vite.config.js         # Vite configuration with HTTPS proxy and Vitest setup
 │
 └── README.md
@@ -131,27 +139,30 @@ cd ../..
 
 ### 4. Install Dependencies
 ```bash
-# Install backend dependencies
-cd api && npm install
-
-# Install frontend dependencies
-cd ../client && npm install
+# Install root orchestration tools, backend, and frontend dependencies:
+npm run install:all
 ```
+*(Or manually run `npm install` in the root, `cd api && npm install`, and `cd client && npm install`)*.
 
-### 5. Running the Applicationn
+### 5. Running the Application
 
-**Terminal 1 — Start the Backend Server:**
+**Option A (Recommended) — Run Full Stack with a Single Command:**
+From the root directory:
 ```bash
-cd api
 npm run dev
 ```
-The API starts securely at `https://localhost:4000`.
+This concurrently starts both the **Backend API** (`https://localhost:4000`) and the **Vite Frontend Client** (`http://localhost:5173`) in a unified terminal with color-coded log streams.
 
-**Terminal 2 — Start the Frontend Client:**
-```bash
-cd client
-npm run dev
-```
+**Option B — Run Separately in Individual Terminals:**
+* **Terminal 1 (Backend Server):**
+  ```bash
+  cd api && npm run dev
+  ```
+* **Terminal 2 (Frontend Client):**
+  ```bash
+  cd client && npm run dev
+  ```
+
 Open `http://localhost:5173` in your browser. The Vite development server proxies API requests to `https://localhost:4000` automatically.
 
 ---
@@ -159,7 +170,7 @@ Open `http://localhost:5173` in your browser. The Vite development server proxie
 ## Testing Procedures
 
 ### 1. Backend Automated Tests (Jest & Supertest)
-Runs unit and integration tests covering authentication validation, gig ownership, and booking transactions:
+Runs 30 unit and integration tests covering authentication validation, gig ownership, booking transactions, and the SARS progressive tax calculation engine:
 ```bash
 cd api
 npm test
@@ -170,7 +181,7 @@ npm run test:coverage
 ```
 
 ### 2. Frontend Automated Tests (Vitest & React Testing Library)
-Runs automated UI tests verifying component rendering, input validation, role selection, and user interactions:
+Runs 12 automated UI tests verifying component rendering, input validation, role selection, booking modals, and the interactive income/tax dashboard:
 ```bash
 cd client
 npm test
@@ -208,9 +219,86 @@ npm run test:api
 * `POST /api/bookings` — Book a gig with simulated payment (Client only, rate-limited).
 * `GET /api/bookings/client` — View client's bookings and spend stats (Client only).
 * `GET /api/bookings/freelancer` — View received orders and earned income (Freelancer only).
+* `GET /api/bookings/freelancer/income-analytics` — Comprehensive revenue aggregation, monthly timeline, category distribution, and SARS tax breakdown (Freelancer only).
+* `POST /api/bookings/freelancer/tax-simulate` — Interactive real-time scenario simulation for custom revenue and deductible business expenses (Freelancer only).
 * `GET /api/bookings/admin/all` — Platform-wide transaction audit (Admin only).
 * `GET /api/bookings/:id` — View booking details (Authorized users only).
 * `PATCH /api/bookings/:id/status` — Update order status (in_progress, completed, cancelled).
+
+---
+
+## Tax Estimation Logic & Financial Insights
+
+### 1. Theoretical Foundation & Legal Context
+In South Africa, freelancers, sole proprietors, and independent contractors earn taxable income subject to the **South African Revenue Service (SARS) Individual Income Tax** framework. Unlike formal employees whose taxes are withheld monthly at source via Pay-As-You-Earn (PAYE), freelancers operate under a self-assessment and **Provisional Tax** regime (governed by the Fourth Schedule to the Income Tax Act No. 58 of 1962).
+
+HustleHub+ embeds an automated tax calculation engine (`api/src/utils/taxCalculator.js`) and client-side intelligence dashboard (`client/src/components/dashboard/IncomeTaxDashboard.jsx`) to bridge the gap between platform gig revenues and statutory compliance.
+
+### 2. SARS Progressive Tax Brackets (2024 / 2025 / 2026)
+South Africa operates on a **progressive marginal tax system**. Taxpayers only pay the marginal rate on the portion of income that falls within that specific bracket:
+
+| Tax Bracket Tier | Taxable Income Range (ZAR) | Statutory Rate of Tax |
+|:---|:---|:---|
+| **Tier 1** | R0 – R237,100 | 18% of taxable income |
+| **Tier 2** | R237,101 – R370,500 | R42,678 + 26% of taxable income above R237,100 |
+| **Tier 3** | R370,501 – R512,800 | R77,362 + 31% of taxable income above R370,500 |
+| **Tier 4** | R512,801 – R673,000 | R121,475 + 36% of taxable income above R512,800 |
+| **Tier 5** | R673,001 – R857,900 | R179,147 + 39% of taxable income above R673,000 |
+| **Tier 6** | R857,901 – R1,817,000 | R251,258 + 41% of taxable income above R857,900 |
+| **Tier 7** | R1,817,001 and above | R644,489 + 45% of taxable income above R1,817,000 |
+
+### 3. Statutory Rebates and Tax-Free Threshold
+Under Section 6 of the Income Tax Act, all individual taxpayers under the age of 65 qualify for an annual **Primary Tax Rebate**:
+* **Primary Tax Rebate:** **R17,235.00** per annum.
+* **Tax-Free Threshold:** **R95,750.00** ($\text{R17,235} \div 0.18 = \text{R95,750}$).
+
+If a freelancer's annual taxable income is R95,750 or below, their gross tax liability is completely cancelled out by the primary rebate, resulting in **R0 net tax payable**.
+
+### 4. Mathematical Calculation Formula
+For any given gross platform income ($G$) and allowable business expenses ($D$):
+
+$$\text{Taxable Income } (Y) = \max(0, G - D)$$
+
+Using the active bracket where $Y \in (\text{Bracket Min}, \text{Bracket Max}]$:
+
+$$\text{Gross Tax } (T_{\text{gross}}) = \text{Base Tax} + (Y - \text{Bracket Floor}) \times \text{Marginal Rate}$$
+
+Applying the primary statutory rebate ($R = \text{R17,235}$):
+
+$$\text{Net Tax Payable } (T_{\text{net}}) = \max(0, T_{\text{gross}} - R)$$
+
+The **Effective Tax Rate** ($E$) and **Net Take-Home Pay** ($N$) are derived as:
+
+$$E = \left(\frac{T_{\text{net}}}{G}\right) \times 100\% \quad \text{and} \quad N = G - T_{\text{net}}$$
+
+### 5. Step-by-Step Worked Mathematical Example
+Assume a freelancer generates **R300,000.00** in gross completed bookings with **R20,000.00** in deductible business expenses (s11(a)):
+1. **Taxable Income:** $\text{R300,000} - \text{R20,000} = \text{R280,000.00}$.
+2. **Bracket Identification:** R280,000 falls in **Tier 2** (R237,101 to R370,500).
+   * Base Tax = R42,678.00
+   * Bracket Floor = R237,100.00
+   * Marginal Rate = 26% (0.26)
+3. **Marginal Portion:** $\text{R280,000} - \text{R237,100} = \text{R42,900.00}$.
+4. **Marginal Tax:** $\text{R42,900} \times 0.26 = \text{R11,154.00}$.
+5. **Gross Statutory Tax:** $\text{R42,678.00} + \text{R11,154.00} = \text{R53,832.00}$.
+6. **Apply Primary Rebate:** $\text{R53,832.00} - \text{R17,235.00} = \text{R36,597.00}$ Net Tax Payable.
+7. **Effective Tax Rate:** $\frac{\text{R36,597}}{\text{R300,000}} \times 100\% = \mathbf{12.20\%}$.
+8. **Net Take-Home Earnings:** $\text{R300,000.00} - \text{R36,597.00} = \mathbf{R263,403.00}$.
+
+### 6. Provisional Tax Milestones (IRP6)
+Freelancers do not experience PAYE deductions at source. Instead, the application computes semi-annual provisional tax payments:
+* **Period 1 (due 31 August):** 50% of total estimated annual tax liability ($T_{\text{net}} \times 0.5$).
+* **Period 2 (due 28/29 February):** Remaining 50% reconciled against total actual earnings.
+
+### 7. Frontend Financial Insights & Interactive Visualizations
+The Freelancer Studio includes a dedicated **Tax & Financial Insights** dashboard featuring:
+* **KPI Metrics:** Gross Earnings, Realized vs. Pending revenue, Estimated Tax Liability, Net Take-Home Pay, and Effective Tax Rate.
+* **Monthly Revenue & Tax Trend Chart:** Pure React SVG chart comparing monthly revenue, tax provisions, and net retained income.
+* **SARS Progressive Bracket Visualizer:** Interactive table and progress indicators showing how much income falls into each statutory tier and which marginal bracket is currently active.
+* **Income by Service Category:** Revenue distribution across gig offerings (Web Development, UI/UX, Security, etc.).
+* **Provisional Tax Tracker:** Real-time milestone dates and payment projections.
+* **Interactive Tax & Expense Simulator:** Sliders and numerical inputs allowing freelancers to test scenario earnings and Section 11(a) business expense deductions to see instant tax savings.
+* **Print & Export Capability:** Formatted layout ready for physical print or PDF export for accounting records.
 
 ---
 
@@ -225,3 +313,6 @@ npm run test:api
 * **OWASP (2024b)** *Input Validation Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
 * **OWASP (2024c)** *Denial of Service Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html
 * **OWASP (2024d)** *Authentication Cheat Sheet*. Available at: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
+* **SARS (2024)** *Rates of Tax for Individuals (2024/2025/2026 Tax Years)*. South African Revenue Service. Available at: https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/
+* **SARS (2024)** *Provisional Tax: External Guide (GEN-PT-01-G01)*. South African Revenue Service. Available at: https://www.sars.gov.za/types-of-tax/provisional-tax/
+* **Republic of South Africa (1962)** *Income Tax Act No. 58 of 1962, as amended*. Government Gazette.

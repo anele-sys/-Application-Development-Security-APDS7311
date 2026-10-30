@@ -48,6 +48,24 @@ const bookingService = {
     const response = await apiClient.get('/api/bookings/admin/all');
     return response.data;
   },
+
+  /**
+   * Freelancer: Fetch aggregated income, category metrics, and SARS tax analytics
+   */
+  async getIncomeAnalytics(deductions = 0) {
+    const response = await apiClient.get('/api/bookings/freelancer/income-analytics', {
+      params: { deductions },
+    });
+    return response.data;
+  },
+
+  /**
+   * Freelancer: Simulate tax scenario with custom income and deductions
+   */
+  async simulateTax(data) {
+    const response = await apiClient.post('/api/bookings/freelancer/tax-simulate', data);
+    return response.data;
+  },
 };
 
 export default bookingService;

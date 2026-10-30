@@ -209,12 +209,123 @@ describe('Booking Controller Tests', () => {
         expect.objectContaining({
           success: true,
           count: 2,
-          stats: {
+          stats: expect.objectContaining({
             totalEarned: 2000, // Cancelled order excluded from earnings
             totalOrders: 2,
             activeOrders: 0,
             completedOrders: 1,
-          },
+            taxEstimate: expect.any(Object),
+          }),
+        })
+      );
+    });
+  });
+
+  describe('getFreelancerIncomeAnalytics', () => {
+    it('returns aggregated income and tax analytics for freelancer', async () => {
+      const mockBookings = [
+        {
+          _id: 'b1',
+          price: 50000,
+          status: 'completed',
+          createdAt: new Date().toISOString(),
+          gig: { category: 'Web Development' },
+        },
+        {
+          _id: 'b2',
+          price: 20000,
+          status: 'in_progress',
+          createdAt: new Date().toISOString(),
+          gig: { category: 'UI/UX Design' },
+        },
+      ];
+
+      const query = {
+        populate: jest.fn().mockReturnThis(),
+        sort: jest.fn().mockResolvedValue(mockBookings),
+      };
+      Booking.find.mockReturnValue(query);
+
+      const req = {
+        user: { id: 'freelancer-1' },
+        query: { deductions: '5000' },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+
+      const { getFreelancerIncomeAnalytics } = require('../src/controllers/bookingController');
+      await getFreelancerIncomeAnalytics(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          analytics: expect.objectContaining({
+            grossEarned: 70000,
+            realizedIncome: 50000,
+            pendingIncome: 20000,
+            taxSummary: expect.objectContaining({
+              grossIncome: 70000,
+              deductibleExpenses: 5000,
+              taxableIncome: 65000,
+            }),
+          }),
+        })
+      );
+    });
+  });
+
+  describe('simulateFreelancerTax', () => {
+    it('returns real-time simulated tax calculations for custom income and deductions', async () => {
+      const req = {
+        body: {
+          grossIncome: 300000,
+          deductibleExpenses: 30000,
+        },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+
+      const { simulateFreelancerTax } = require('../src/controllers/bookingController');
+      await simulateFreelancerTax(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          simulation: expect.objectContaining({
+            grossIncome: 300000,
+            deductibleExpenses: 30000,
+            taxableIncome: 270000,
+            netTaxPayable: expect.any(Number),
+          }),
+        })
+      );
+    });
+
+    it('rejects invalid or negative gross income', async () => {
+      const req = {
+        body: {
+          grossIncome: -100,
+        },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+
+      const { simulateFreelancerTax } = require('../src/controllers/bookingController');
+      await simulateFreelancerTax(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          message: expect.stringContaining('Gross income must be a valid non-negative number'),
         })
       );
     });
