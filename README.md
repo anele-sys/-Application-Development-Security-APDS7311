@@ -138,7 +138,7 @@ cd api && npm install
 cd ../client && npm install
 ```
 
-### 5. Running the Application
+### 5. Running the Applicationn
 
 **Terminal 1 — Start the Backend Server:**
 ```bash
