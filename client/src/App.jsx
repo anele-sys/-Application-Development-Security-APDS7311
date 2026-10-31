@@ -1,4 +1,5 @@
 import React from 'react';
+import "./services/sessionTimeout"
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/layout/Layout';
