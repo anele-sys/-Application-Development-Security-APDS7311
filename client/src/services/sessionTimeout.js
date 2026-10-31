@@ -1,5 +1,5 @@
 
-const INACTIVITY_LIMIT = 5 * 60 * 1000; // 5 minutes
+const INACTIVITY_LIMIT = 2 * 60 * 1000; // 5 minutes
 
 let inactivityTimer;
 
