@@ -371,3 +371,16 @@ justification and owner.
 Current code controls include password hashing with bcrypt, JWT authentication,
 role-based route authorization, Helmet HTTP security headers, input validation,
 request ID tracking, CORS configuration, HTTPS support, and rate limiting.
+
+# Docker Deployment
+
+Copy `.env.example` to `.env`, replace `JWT_SECRET`, and start all services:
+
+```powershell
+docker compose up --build
+```
+
+The application runs on `http://localhost:8080`, the API health endpoint is
+available at `http://localhost:4000/health`, and MongoDB uses a persistent
+Docker volume. Container health checks and bounded JSON-file logs are configured
+for the API and frontend.
