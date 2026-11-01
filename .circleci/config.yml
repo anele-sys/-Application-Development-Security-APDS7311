@@ -1,0 +1,73 @@
+version: 2.1
+
+jobs:
+  build_app:
+    working_directory: ~/build
+    docker:
+      - image: cimg/node:20.6.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - api-dependencies-v1-{{ checksum "api/package-lock.json" }}
+            - api-dependencies-v1-
+      - run:
+          name: Install API dependencies
+          command: |
+            cd api
+            npm ci
+      - save_cache:
+          paths:
+            - api/node_modules
+          key: api-dependencies-v1-{{ checksum "api/package-lock.json" }}
+      - restore_cache:
+          keys:
+            - client-dependencies-v1-{{ checksum "client/package-lock.json" }}
+            - client-dependencies-v1-
+      - run:
+          name: Install client dependencies
+          command: |
+            cd client
+            npm ci
+      - save_cache:
+          paths:
+            - client/node_modules
+          key: client-dependencies-v1-{{ checksum "client/package-lock.json" }}
+      - run:
+          name: Run API tests
+          command: npm test --prefix api -- --runInBand
+      - run:
+          name: Build client
+          command: npm run build --prefix client
+      - persist_to_workspace:
+          root: ~/build
+          paths:
+            - .
+
+  sonarqube:
+    working_directory: ~/build
+    docker:
+      - image: sonarsource/sonar-scanner-cli:latest
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: ~/build
+      - run:
+          name: Analyze code quality and security
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+              -Dsonar.organization="$SONAR_ORG" \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.token="$SONAR_TOKEN" \
+              -Dsonar.branch.name="${CIRCLE_BRANCH:-main}" \
+              -Dsonar.sources=. \
+              -Dsonar.exclusions="**/node_modules/**,**/coverage/**,**/dist/**"
+
+workflows:
+  build-and-sonar:
+    jobs:
+      - build_app
+      - sonarqube:
+          requires:
+            - build_app

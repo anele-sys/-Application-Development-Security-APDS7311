@@ -347,3 +347,15 @@ security hotspots, and vulnerabilities. The CI workflow generates API test
 coverage and fails unless the configured SonarCloud quality gate passes.
 Unresolved issues and security hotspots must be resolved in SonarCloud before
 the change is merged.
+
+# CircleCI Pipeline
+
+The [.circleci/config.yml](.circleci/config.yml) pipeline installs the API and
+client dependencies, runs the API tests, builds the client, and scans the
+repository with SonarCloud.
+
+In CircleCI Project Settings, add these environment variables:
+
+- `SONAR_TOKEN` - a SonarCloud token
+- `SONAR_ORG` - `anele-sys`
+- `SONAR_PROJECT_KEY` - `anele-sys_-Application-Development-Security-APDS7311`
