@@ -59,14 +59,10 @@ jobs:
           name: Analyze code quality and security
           command: |
             sonar-scanner \
-              -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
-              -Dsonar.organization="$SONAR_ORG" \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.token="$SONAR_TOKEN" \
               -Dsonar.branch.name="${CIRCLE_BRANCH:-main}" \
-              -Dsonar.qualitygate.wait=true \
-              -Dsonar.sources=. \
-              -Dsonar.exclusions="**/node_modules/**,**/coverage/**,**/dist/**"
+              -Dsonar.qualitygate.wait=true
 
 workflows:
   build-and-sonar:
