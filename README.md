@@ -60,7 +60,8 @@ Users cannot access, modify, or delete resources that do not belong to them.
 * **CORS Protection:** Rejects cross-origin requests originating outside the configured `CLIENT_ORIGIN`.
 * **Password Hashing:** Passwords hashed with `bcryptjs` (salt rounds: 12).
 * **Safe Error Handling:** Generic authentication messages prevent user enumeration, and application error details are obscured from client responses.
-
+* **Session Timeout:** User sessions automatically expire after a period of inactivity (2 minutes). This helps prevent unauthorized access if a user leaves their account logged in on a shared or unattended device.
+* **Request ID Tracking:** A unique X-Request-ID is generated for every request sent to the application. This allows developers and administrators to trace requests in system logs, making it easier to troubleshoot errors and investigate incidents.
 ---
 
 ## Project Structure

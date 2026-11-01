@@ -6,7 +6,7 @@
 // Load environment variables from the .env file
 const dotenv = require('dotenv');
 const path = require('path');
-
+const requestIdTracker = require("./middleware/requestIdTracker");
 
 dotenv.config({
   path: path.join(__dirname, '..', '..', '.env')
@@ -93,7 +93,7 @@ console.log(`Development admin provisioned: ${adminEmail}`);};
 
 // Disable the X-Powered-By header to reduce technology fingerprinting
 app.disable('x-powered-by');
-
+app.use(requestIdTracker);
 // Configure Helmet to add security-related HTTP headers
 app.use(
   helmet({
