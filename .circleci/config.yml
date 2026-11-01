@@ -58,9 +58,14 @@ jobs:
       - run:
           name: Analyze code quality and security
           command: |
+            if [ -z "${SONAR_TOKEN}" ]; then
+              echo "WARNING: SONAR_TOKEN is not set. Skipping SonarCloud analysis."
+              echo "To enable analysis, add SONAR_TOKEN to the CircleCI project environment variables."
+              exit 0
+            fi
             sonar-scanner \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token="$SONAR_TOKEN" \
+              -Dsonar.token="${SONAR_TOKEN}" \
               -Dsonar.branch.name="${CIRCLE_BRANCH:-main}" \
               -Dsonar.qualitygate.wait=true
 
