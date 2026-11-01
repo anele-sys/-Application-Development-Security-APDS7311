@@ -329,3 +329,21 @@ The Freelancer Studio includes a dedicated **Tax & Financial Insights** dashboar
 * **SARS (2024)** *Rates of Tax for Individuals (2024/2025/2026 Tax Years)*. South African Revenue Service. Available at: https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/
 * **SARS (2024)** *Provisional Tax: External Guide (GEN-PT-01-G01)*. South African Revenue Service. Available at: https://www.sars.gov.za/types-of-tax/provisional-tax/
 * **Republic of South Africa (1962)** *Income Tax Act No. 58 of 1962, as amended*. Government Gazette.
+# SonarCloud
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=anele-sys_-Application-Development-Security-APDS7311&metric=alert_status)](https://sonarcloud.io/dashboard?id=anele-sys_-Application-Development-Security-APDS7311)
+
+Pull requests and pushes to `main` run a SonarCloud scan in the `Node.js CI`
+workflow. Add a repository secret named `SONAR_TOKEN` containing a SonarCloud
+token.
+
+The SonarCloud project must be owned by the `anele-sys` organization and use
+the project key `anele-sys_-Application-Development-Security-APDS7311`. Update
+[sonar-project.properties](sonar-project.properties) if the organization or
+project key differs.
+
+SonarCloud analyzes the API and React source code for bugs, code smells,
+security hotspots, and vulnerabilities. The CI workflow generates API test
+coverage and fails unless the configured SonarCloud quality gate passes.
+Unresolved issues and security hotspots must be resolved in SonarCloud before
+the change is merged.
