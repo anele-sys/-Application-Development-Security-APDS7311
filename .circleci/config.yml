@@ -4,7 +4,7 @@ jobs:
   build_app:
     working_directory: ~/build
     docker:
-      - image: cimg/node:20.6.0
+      - image: cimg/node:20.18.0
     steps:
       - checkout
       - restore_cache:
