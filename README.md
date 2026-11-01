@@ -359,3 +359,15 @@ In CircleCI Project Settings, add these environment variables:
 - `SONAR_TOKEN` - a SonarCloud token
 - `SONAR_ORG` - `anele-sys`
 - `SONAR_PROJECT_KEY` - `anele-sys_-Application-Development-Security-APDS7311`
+
+# Security Review
+
+The application is reviewed through automated dependency checks, unit and API
+tests, GitHub Actions, CircleCI, and SonarCloud. Review all SonarCloud findings
+under **Issues**, **Security Hotspots**, and **Vulnerabilities** before release.
+New security findings must be resolved or documented as accepted risks with a
+justification and owner.
+
+Current code controls include password hashing with bcrypt, JWT authentication,
+role-based route authorization, Helmet HTTP security headers, input validation,
+request ID tracking, CORS configuration, HTTPS support, and rate limiting.

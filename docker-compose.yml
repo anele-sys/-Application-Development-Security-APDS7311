@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://mongo:27017/hustlehub
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your environment}
+      USE_HTTPS: "false"
+      PORT: 4000
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  client:
+    build: ./client
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  mongo-data:
