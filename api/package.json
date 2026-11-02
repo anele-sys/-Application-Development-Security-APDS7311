@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "seed": "node src/seed.js",
     "lint": "eslint src/",
     "test": "jest",
     "test:coverage": "jest --coverage",
@@ -22,6 +23,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
+    "hustlehub-plus": "file:..",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.2"
   },

@@ -10,7 +10,7 @@ export default defineConfig({
       '/api': {
         target: 'https://localhost:4000',
         changeOrigin: true,
-        secure: false, // Allows self-signed local SSL certificate in development
+        secure: false,
       },
       '/health': {
         target: 'https://localhost:4000',
@@ -25,4 +25,3 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
   },
 })
-

@@ -73,7 +73,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Newman Client\",\n  \"email\": \"client_{{$randomInt}}@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"client\"\n}"
+          "raw": "{\n  \"name\": \"Newman Client\",\n  \"email\": \"client@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"client\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/register",
@@ -104,7 +104,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Newman Freelancer\",\n  \"email\": \"freelancer_{{$randomInt}}@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"freelancer\"\n}"
+          "raw": "{\n  \"name\": \"Newman Freelancer\",\n  \"email\": \"freelancer@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"freelancer\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/register",
@@ -148,6 +148,9 @@
           "listen": "test",
           "script": {
             "exec": [
+              "pm.test('Login is successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
               "if (pm.response.code === 200) {",
               "    var jsonData = pm.response.json();",
               "    pm.environment.set('clientToken', jsonData.token);",
@@ -180,6 +183,9 @@
           "listen": "test",
           "script": {
             "exec": [
+              "pm.test('Login is successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
               "if (pm.response.code === 200) {",
               "    var jsonData = pm.response.json();",
               "    pm.environment.set('freelancerToken', jsonData.token);",
