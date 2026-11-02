@@ -73,7 +73,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Newman Client\",\n  \"email\": \"client@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"client\"\n}"
+          "raw": "{\n  \"name\": \"Lwazi Cele\",\n  \"email\": \"client@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"client\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/register",
@@ -104,7 +104,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Newman Freelancer\",\n  \"email\": \"freelancer@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"freelancer\"\n}"
+          "raw": "{\n  \"name\": \"Naledi Nkosi\",\n  \"email\": \"freelancer@gmail.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"freelancer\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/register",
@@ -135,7 +135,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Password123!\"\n}"
+          "raw": "{\n  \"email\": \"client@gmail.com\",\n  \"password\": \"Password123!\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/login",
@@ -170,7 +170,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"freelancer@example.com\",\n  \"password\": \"Password123!\"\n}"
+          "raw": "{\n  \"email\": \"freelancer@gmail.com\",\n  \"password\": \"Password123!\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/auth/login",

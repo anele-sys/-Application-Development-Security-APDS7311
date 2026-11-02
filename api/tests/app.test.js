@@ -18,7 +18,7 @@ describe('HustleHub authentication API', () => {
   test('rejects registration without a name', async () => {
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ email: 'user@example.com', password: 'Valid1234' });
+      .send({ email: 'user@yahoo.com', password: 'Valid1234' });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Name is required');
@@ -36,7 +36,7 @@ describe('HustleHub authentication API', () => {
   test('rejects registration without a password', async () => {
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Test User', email: 'user@example.com' });
+      .send({ name: 'Test User', email: 'user@yahoo.com' });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Password is required');
@@ -54,7 +54,7 @@ describe('HustleHub authentication API', () => {
   test('rejects registration with a weak password', async () => {
     const response = await request(app)
       .post('/api/auth/register')
-      .send({ name: 'Test User', email: 'user@example.com', password: 'weakpass' });
+      .send({ name: 'Test User', email: 'user@yahoo.com', password: 'weakpass' });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toMatch(/Password must be at least 8 characters/);
@@ -65,7 +65,7 @@ describe('HustleHub authentication API', () => {
       .post('/api/auth/register')
       .send({
         name: 'Test User',
-        email: 'user@example.com',
+        email: 'user@yahoo.com',
         password: 'Valid1234',
         role: 'admin'
       });
@@ -86,7 +86,7 @@ describe('HustleHub authentication API', () => {
   test('rejects login without a password', async () => {
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'user@example.com' });
+      .send({ email: 'user@yahoo.com' });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('Password is required');

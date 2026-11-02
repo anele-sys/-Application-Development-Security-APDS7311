@@ -183,7 +183,7 @@ const Register = () => {
               type="email"
               autoComplete="email"
               className={`form-input ${errors.email ? 'has-error' : ''}`}
-              placeholder="you@example.com"
+              placeholder="you@yahoo.com"
               value={formData.email}
               onChange={handleChange}
               disabled={isSubmitting}

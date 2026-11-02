@@ -82,11 +82,17 @@ const hashedPassword = await bcrypt.hash(
 );
 
 // Create the administrator using the private admin creation method
-await User.createAdmin({
-  name: adminName,
-  email: adminEmail,
-  password: hashedPassword
-});
+try {
+  await User.createAdmin({
+    name: adminName,
+    email: adminEmail,
+    password: hashedPassword
+  });
+} catch (error) {
+  if (error?.code !== 11000) {
+    throw error;
+  }
+}
 
 // Confirm that the development administrator was created
 console.log(`Development admin provisioned: ${adminEmail}`);};

@@ -10,7 +10,7 @@ body:
   content: |-
     {
       "name": "Jane Doe",
-      "email": "shane@example.com",
+      "email": "shane@yahoo.com",
       "password": "Password1",
       "role": "client"
     }

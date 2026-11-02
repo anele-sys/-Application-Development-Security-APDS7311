@@ -35,15 +35,78 @@ const gigs = [
 const seed = async () => {
   await connectDB();
 
-  let freelancer = await User.findByEmail('demo.freelancer@hustlehub.local');
+  const demoPassword = await bcrypt.hash('DemoPassword123!', Number(process.env.SALT_ROUNDS) || 12);
+  const demoAdminPassword = await bcrypt.hash('AdminPassword123!', Number(process.env.SALT_ROUNDS) || 12);
+
+  let freelancer = await User.findByEmail('demo.freelancer@gmail.com');
   if (!freelancer) {
-    const password = await bcrypt.hash('DemoPassword123!', Number(process.env.SALT_ROUNDS) || 12);
     freelancer = await User.createUser({
-      name: 'Demo Freelancer',
-      email: 'demo.freelancer@hustlehub.local',
-      password,
+      name: 'Thabo Khumalo',
+      email: 'demo.freelancer@gmail.com',
+      password: demoPassword,
       role: 'freelancer'
     });
+  }
+  await User.updateOne(
+    { _id: freelancer._id },
+    { $set: { name: 'Thabo Khumalo', password: demoPassword, role: 'freelancer' } }
+  );
+
+  let client = await User.findByEmail('demo.client@gmail.com');
+  if (!client) {
+    client = await User.createUser({
+      name: 'Lerato Mokoena',
+      email: 'demo.client@gmail.com',
+      password: demoPassword,
+      role: 'client'
+    });
+  }
+  await User.updateOne(
+    { _id: client._id },
+    { $set: { name: 'Lerato Mokoena', password: demoPassword, role: 'client' } }
+  );
+
+  const newmanPassword = await bcrypt.hash('Password123!', Number(process.env.SALT_ROUNDS) || 12);
+  let newmanClient = await User.findByEmail('client@gmail.com');
+  if (!newmanClient) {
+    newmanClient = await User.createUser({
+      name: 'Lwazi Cele',
+      email: 'client@gmail.com',
+      password: newmanPassword,
+      role: 'client'
+    });
+  }
+  await User.updateOne(
+    { _id: newmanClient._id },
+    { $set: { name: 'Lwazi Cele', password: newmanPassword, role: 'client' } }
+  );
+
+  let newmanFreelancer = await User.findByEmail('freelancer@gmail.com');
+  if (!newmanFreelancer) {
+    newmanFreelancer = await User.createUser({
+      name: 'Naledi Nkosi',
+      email: 'freelancer@gmail.com',
+      password: newmanPassword,
+      role: 'freelancer'
+    });
+  }
+  await User.updateOne(
+    { _id: newmanFreelancer._id },
+    { $set: { name: 'Naledi Nkosi', password: newmanPassword, role: 'freelancer' } }
+  );
+
+  let admin = await User.findByEmail('admin@gmail.com');
+  if (!admin) {
+    admin = await User.createAdmin({
+      name: 'Nomsa Dlamini',
+      email: 'admin@gmail.com',
+      password: demoAdminPassword
+    });
+  } else {
+    await User.updateOne(
+      { _id: admin._id },
+      { $set: { name: 'Nomsa Dlamini', password: demoAdminPassword, role: 'admin' } }
+    );
   }
 
   for (const gig of gigs) {

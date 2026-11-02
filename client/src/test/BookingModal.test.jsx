@@ -17,7 +17,7 @@ const mockGig = {
   price: 2500,
   owner: {
     name: 'John Doe',
-    email: 'john@example.com',
+    email: 'john@yahoo.com',
   },
 };
 

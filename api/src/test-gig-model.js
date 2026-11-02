@@ -14,14 +14,14 @@ const testGigModel = async () => {
 
     // Find an existing freelancer
     let freelancer = await User.findByEmail(
-      'gigtest@example.com'
+      'gigtest@yahoo.com'
     );
 
     // Create a temporary freelancer if one does not exist
     if (!freelancer) {
       freelancer = await User.createUser({
         name: 'Gig Test Freelancer',
-        email: 'gigtest@example.com',
+        email: 'gigtest@yahoo.com',
         password: 'TestPassword123',
         role: 'freelancer'
       });
