@@ -98,7 +98,7 @@ Users cannot access, modify, or delete resources that do not belong to them.
 ## Setup & Running Instructions
 
 ### 1. Prerequisites
-* **Node.js** (v18 or higher) and **npm**
+* **Node.js** (v20.19 or higher) and **npm**
 * **MongoDB** instance (local server or MongoDB Atlas URI)
 * **OpenSSL** (for generating local SSL certificates)
 
@@ -202,7 +202,7 @@ npm run test:api
 GitHub Actions runs the workflow in `.github/workflows/node.js.yml` on pushes and pull requests targeting `main`. The backend and frontend jobs run independently on Ubuntu, and a failed install, build, or test step fails its job and the workflow.
 
 ### Backend job
-Runs on Node.js 18, 20, and 22. It installs the API dependencies with `npm ci`, runs the API build script if one is defined, and executes the Jest tests. It then starts a MongoDB 7 service and the API over HTTP using CI-only settings, waits for the health endpoint, and runs the Postman collection with Newman against the local API.
+Runs on Node.js 20 and 22. It installs the API dependencies with `npm ci`, runs the API build script if one is defined, and executes the Jest tests. It then starts a MongoDB 7 service and the API over HTTP using CI-only settings, waits for the health endpoint, and runs the Postman collection with Newman against the local API.
 
 ### Frontend job
 Runs on Node.js 20 and 22. It installs the client dependencies with `npm ci`, creates a production build with `npm run build`, and runs the Vitest suite with `npm test`.
