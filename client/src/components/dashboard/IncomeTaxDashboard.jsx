@@ -14,13 +14,10 @@ import {
   ChevronUp,
   ShieldCheck,
   CheckCircle,
-  AlertCircle,
   PieChart as PieIcon,
   Sliders,
   Sparkles,
-  ArrowRight,
   Info,
-  DollarSign,
   Award,
 } from 'lucide-react';
 import bookingService from '../../services/bookingService';
@@ -122,8 +119,6 @@ const IncomeTaxDashboard = () => {
   const effectiveRate = activeTax?.effectiveTaxRate || 0;
   const marginalRate = activeTax?.marginalTaxRatePercent || '18%';
   const isBelowThreshold = activeTax?.isBelowThreshold;
-  const deductions = activeTax?.deductibleExpenses || 0;
-
   // Derived user-friendly metrics
   const takeHomePercent = gross > 0 ? Number(((takeHome / gross) * 100).toFixed(1)) : 100;
   const taxPercent = gross > 0 ? Number(((taxPayable / gross) * 100).toFixed(1)) : 0;

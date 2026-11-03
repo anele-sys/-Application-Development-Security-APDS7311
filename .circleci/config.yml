@@ -34,11 +34,11 @@ jobs:
             - client/node_modules
           key: client-dependencies-v1-{{ checksum "client/package-lock.json" }}
       - run:
-          name: Run API tests
-          command: npm test --prefix api -- --runInBand
+          name: Run API tests and generate coverage
+          command: npm run test:coverage --prefix api -- --runInBand
       - run:
-          name: Run client tests
-          command: npm test --prefix client
+          name: Run client tests and generate coverage
+          command: npm run test:coverage --prefix client
       - run:
           name: Build client
           command: npm run build --prefix client

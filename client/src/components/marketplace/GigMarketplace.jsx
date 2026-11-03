@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Sparkles, Filter, ShoppingBag, User } from 'lucide-react';
+import { Sparkles, ShoppingBag, User } from 'lucide-react';
 import gigService from '../../services/gigService';
 import { useAuth } from '../../context/AuthContext';
 import BookingModal from '../common/BookingModal';
