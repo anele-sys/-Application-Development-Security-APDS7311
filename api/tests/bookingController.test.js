@@ -15,6 +15,7 @@ const {
   getClientBookings,
   getFreelancerBookings,
   getBookingById,
+  updateBookingStatus,
 } = require('../src/controllers/bookingController');
 
 describe('Booking Controller Tests', () => {
@@ -218,6 +219,68 @@ describe('Booking Controller Tests', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('booking access control', () => {
+    const populatedBookingQuery = (booking) => {
+      const query = {
+        populate: jest.fn(),
+      };
+      query.populate
+        .mockReturnValueOnce(query)
+        .mockReturnValueOnce(query)
+        .mockResolvedValueOnce(booking);
+      return query;
+    };
+
+    test('prevents an unrelated user from viewing a booking', async () => {
+      Booking.findById.mockReturnValue(populatedBookingQuery({
+        _id: 'booking-1',
+        client: { _id: 'client-1' },
+        freelancer: { _id: 'freelancer-1' },
+      }));
+      const req = {
+        params: { id: 'booking-1' },
+        user: { id: 'other-user', role: 'client' },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+
+      await getBookingById(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        success: false,
+        message: 'You are not authorized to view this booking',
+      }));
+    });
+
+    test('prevents an unrelated user from changing a booking status', async () => {
+      Booking.findById.mockResolvedValue({
+        _id: 'booking-1',
+        client: 'client-1',
+        freelancer: 'freelancer-1',
+      });
+      const req = {
+        params: { id: 'booking-1' },
+        body: { status: 'cancelled' },
+        user: { id: 'other-user', role: 'client' },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+
+      await updateBookingStatus(req, res, jest.fn());
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        success: false,
+        message: 'You are not authorized to update this booking',
+      }));
     });
   });
 

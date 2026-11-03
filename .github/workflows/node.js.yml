@@ -140,6 +140,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 20.x
+        cache: "npm"
+        cache-dependency-path: |
+          api/package-lock.json
+          client/package-lock.json
 
     - name: Install API dependencies
       working-directory: api
@@ -152,6 +156,14 @@ jobs:
         JWT_SECRET: ci-test-secret
         USE_HTTPS: "false"
       run: npm run test:coverage -- --runInBand
+
+    - name: Install frontend dependencies
+      working-directory: client
+      run: npm ci
+
+    - name: Generate frontend coverage
+      working-directory: client
+      run: npm run test:coverage
 
     - name: SonarCloud scan
       uses: SonarSource/sonarqube-scan-action@v6

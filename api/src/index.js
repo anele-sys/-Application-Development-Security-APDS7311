@@ -143,7 +143,7 @@ app.use(
     origin: CLIENT_ORIGIN,
 
     // Allow only the HTTP methods required by the application
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
 
     // Allow JSON requests and JWT authentication headers
     allowedHeaders: ['Content-Type', 'Authorization']

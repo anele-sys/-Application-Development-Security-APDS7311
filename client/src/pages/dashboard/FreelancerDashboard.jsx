@@ -8,17 +8,11 @@ import {
   Trash2,
   X,
   ShoppingBag,
-  DollarSign,
-  CheckCircle2,
-  Clock,
-  FileText,
   TrendingUp,
   Search,
-  Filter,
   Eye,
   EyeOff,
   Tag,
-  Layers,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';

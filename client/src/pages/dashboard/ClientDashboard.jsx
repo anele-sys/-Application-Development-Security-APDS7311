@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Clock, CheckCircle, Search, RefreshCw, XCircle, FileText } from 'lucide-react';
+import { ShoppingBag, Search, RefreshCw, XCircle, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import authService from '../../services/authService';
 import bookingService from '../../services/bookingService';

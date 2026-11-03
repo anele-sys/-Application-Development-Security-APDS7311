@@ -43,7 +43,8 @@ const register = async (req, res, next) => {
     }
 
     // Hash the password before storing it
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const saltRounds = Number(process.env.SALT_ROUNDS) || 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create the new user in MongoDB
     const user = await User.createUser({

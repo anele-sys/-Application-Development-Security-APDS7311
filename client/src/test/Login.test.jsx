@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Login from '../pages/auth/Login';
 import { AuthProvider } from '../context/AuthContext';
-import authService from '../services/authService';
 
 vi.mock('../services/authService', () => ({
   default: {

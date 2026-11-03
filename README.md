@@ -329,13 +329,13 @@ The Freelancer Studio includes a dedicated **Tax & Financial Insights** dashboar
 * **SARS (2024)** *Rates of Tax for Individuals (2024/2025/2026 Tax Years)*. South African Revenue Service. Available at: https://www.sars.gov.za/tax-rates/income-tax/rates-of-tax-for-individuals/
 * **SARS (2024)** *Provisional Tax: External Guide (GEN-PT-01-G01)*. South African Revenue Service. Available at: https://www.sars.gov.za/types-of-tax/provisional-tax/
 * **Republic of South Africa (1962)** *Income Tax Act No. 58 of 1962, as amended*. Government Gazette.
-# SonarCloud
+## SonarCloud Static Analysis
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=anele-sys_-Application-Development-Security-APDS7311&metric=alert_status)](https://sonarcloud.io/dashboard?id=anele-sys_-Application-Development-Security-APDS7311)
 
 Pull requests and pushes to `main` run a SonarCloud scan in the `Node.js CI`
-workflow. Add a repository secret named `SONAR_TOKEN` containing a SonarCloud
-token.
+workflow. The scan imports API and frontend LCOV reports and waits for the
+quality gate; a failed quality gate therefore fails the analysis job.
 
 The SonarCloud project must be owned by the `anele-sys` organization and use
 the project key `anele-sys_-Application-Development-Security-APDS7311`. Update
@@ -343,12 +343,18 @@ the project key `anele-sys_-Application-Development-Security-APDS7311`. Update
 project key differs.
 
 SonarCloud analyzes the API and React source code for bugs, code smells,
-security hotspots, and vulnerabilities. The CI workflow generates API test
-coverage and fails unless the configured SonarCloud quality gate passes.
-Unresolved issues and security hotspots must be resolved in SonarCloud before
-the change is merged.
+security hotspots, vulnerabilities, duplications, and coverage. The repository
+owner must create a GitHub Actions secret named `SONAR_TOKEN` containing a
+SonarCloud token with execute-analysis access. The token is not committed.
 
-# CircleCI Pipeline
+Before release, a team member with SonarCloud access must review **Issues** and
+**Security Hotspots**, record the quality-gate result and issue counts, and save
+the evidence described in
+[`docs/evidence/static-analysis/README.md`](docs/evidence/static-analysis/README.md).
+Unresolved findings must be fixed or entered in the findings register with a
+justification, owner, and review date.
+
+## CircleCI Pipeline
 
 The [.circleci/config.yml](.circleci/config.yml) pipeline installs the API and
 client dependencies, runs the API tests, builds the client, and scans the
@@ -360,19 +366,47 @@ In CircleCI Project Settings, add these environment variables:
 - `SONAR_ORG` - `anele-sys`
 - `SONAR_PROJECT_KEY` - `anele-sys_-Application-Development-Security-APDS7311`
 
-# Security Review
+## Final Security Review
 
-The application is reviewed through automated dependency checks, unit and API
-tests, GitHub Actions, CircleCI, and SonarCloud. Review all SonarCloud findings
-under **Issues**, **Security Hotspots**, and **Vulnerabilities** before release.
-New security findings must be resolved or documented as accepted risks with a
-justification and owner.
+### Scope and method
 
-Current code controls include password hashing with bcrypt, JWT authentication,
-role-based route authorization, Helmet HTTP security headers, input validation,
-request ID tracking, CORS configuration, HTTPS support, and rate limiting.
+This review covers the Express API, React client, authentication and
+authorization boundaries, dependency manifests, container-facing HTTP
+configuration, and CI static-analysis configuration. Verification combines
+SonarCloud, dependency audits, unit and API tests, manual inspection of trust
+boundaries, and a production frontend build. Detailed remediation decisions are
+tracked in [`docs/static-analysis-findings.md`](docs/static-analysis-findings.md).
 
-# Docker Deployment
+### Common-threat review
+
+| Threat | Implemented controls | Verification and remaining risk |
+| --- | --- | --- |
+| Injection | Request middleware type-checks, validates, and sanitises accepted fields; query filters are assembled by the server; Mongoose schemas constrain stored values. | Security tests confirm that non-string Mongo-style input is rejected. Continue to avoid passing request objects directly into MongoDB queries. |
+| Cross-site scripting (XSS) | React escapes rendered text by default; input validation rejects or strips raw markup; the Nginx client adds a restrictive Content Security Policy, `nosniff`, referrer, and permissions headers. | Inline styles require `'unsafe-inline'` in `style-src`. Authentication tokens remain in `localStorage`, so an XSS flaw could expose them; migrating to secure, HttpOnly, SameSite cookies is recommended. |
+| Authentication weaknesses | Passwords are hashed with bcrypt using configurable rounds (default 12); JWTs expire, are signed and verified only with HS256, and protected routes reject missing, expired, or invalid tokens. Login and registration endpoints are rate limited. | `JWT_SECRET` must be a long random production secret supplied outside source control. Token revocation is not implemented, so short expiry and logout hygiene remain important. |
+| Access-control failures | Authentication middleware loads the current account; role middleware enforces admin/client/freelancer boundaries; booking controllers also check resource ownership before reading or changing a booking. | Automated tests cover wrong-role denial and unrelated-user denial for booking reads and status changes. New endpoints must apply both route-level RBAC and resource ownership checks. |
+| Dependency and configuration risk | Lockfiles support repeatable installs; GitHub Actions runs tests, builds, coverage, SonarCloud, and its quality gate; secrets are referenced through CI/environment variables. | Both production dependency audits returned 0 known vulnerabilities during this review. Development-only API advisories and their decision are recorded in the findings register. Sonar analysis cannot authenticate until the repository owner configures `SONAR_TOKEN`. |
+
+### Security verification
+
+Run these checks from the repository root:
+
+```bash
+npm test --prefix api -- --runInBand
+npm run test:coverage --prefix api -- --runInBand
+npm run test:coverage --prefix client
+npm run build --prefix client
+npm audit --prefix api --omit=dev
+npm audit --prefix client --omit=dev
+```
+
+The dedicated security tests verify missing and expired JWT rejection, the
+HS256 algorithm allow-list, role denial, valid authentication, unsafe input
+handling, and booking ownership checks. A release is approved only when the CI
+tests and builds pass, the SonarCloud quality gate passes, all security hotspots
+have been reviewed, and remaining risks are documented.
+
+## Docker Deployment
 
 Copy `.env.example` to `.env`, replace `JWT_SECRET`, and start all services:
 

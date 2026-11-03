@@ -29,6 +29,9 @@ const generateToken = (user) => {
     secret,
 
     {
+      // Restrict tokens to the algorithm selected by the application.
+      algorithm: 'HS256',
+
       // Set the token expiration time from the environment.
       // Defaults to one hour if no value is configured.
       expiresIn: process.env.JWT_EXPIRES_IN || '1h'

@@ -36,10 +36,12 @@ const authenticateToken = async (req, res, next) => {
 
     // Verify the token using the configured JWT secret.
     // This also checks whether the token has expired.
-    const decoded = jwt.verify(token, secret);
+    const decoded = jwt.verify(token, secret, {
+      algorithms: ['HS256']
+    });
 
     // Find the user associated with the ID stored inside the JWT.
-const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.id);
 
     // Reject the request if the user account no longer exists.
     if (!user) {

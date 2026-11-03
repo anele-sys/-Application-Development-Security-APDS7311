@@ -19,6 +19,14 @@ export const AuthProvider = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  // Logout handler
+  const logout = useCallback(() => {
+    localStorage.removeItem('hustlehub_token');
+    localStorage.removeItem('hustlehub_user');
+    setToken(null);
+    setUser(null);
+  }, []);
+
   // Initialize and verify authentication state on mount
   useEffect(() => {
     const verifyAuth = async () => {
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     verifyAuth();
-  }, []);
+  }, [logout]);
 
   // Login handler
   const login = useCallback(async (email, password) => {
@@ -64,14 +72,6 @@ export const AuthProvider = ({ children }) => {
   const register = useCallback(async (name, email, password, role) => {
     const response = await authService.register({ name, email, password, role });
     return response;
-  }, []);
-
-  // Logout handler
-  const logout = useCallback(() => {
-    localStorage.removeItem('hustlehub_token');
-    localStorage.removeItem('hustlehub_user');
-    setToken(null);
-    setUser(null);
   }, []);
 
   const value = {
