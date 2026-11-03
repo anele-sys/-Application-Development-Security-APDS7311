@@ -53,7 +53,7 @@ The following results were recorded on 3 November 2026 before the authenticated
 SonarCloud run:
 
 - API: 5 suites and 40 tests passed; 60.08% line coverage.
-- Client: 5 files and 15 tests passed; 55.36% line coverage.
+- Client: 5 files and 15 tests passed; 55.26% line coverage.
 - Client production build completed successfully.
 - API production dependency audit: 0 vulnerabilities.
 - Client production and complete dependency audits: 0 vulnerabilities.

@@ -159,7 +159,7 @@ jobs:
 
     - name: Install frontend dependencies
       working-directory: client
-      run: npm ci
+      run: npm ci --ignore-scripts
 
     - name: Generate frontend coverage
       working-directory: client
